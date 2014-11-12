@@ -33,7 +33,9 @@ build: $(TARGETS) $(SUBST_FILES)
 
 # These are build during dist stage, and this is independent of
 # whether checktestdata is enabled after configure.
+ifeq ($(PARSERGEN_ENABLED),yes)
 $(PARSER_GEN): paths.mk
+
 lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
 	flexc++ $<
 	$(call INSERT_VERSION,FLEXCPP_VERSION,$(shell flexc++ --version))
@@ -41,6 +43,7 @@ lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
 parse.cc parserbase.h: checktestdata.y parser.h parser.ih parsetype.h
 	bisonc++ $<
 	$(call INSERT_VERSION,BISONCPP_VERSION,$(shell bisonc++ --version))
+endif
 
 checksucc = ./checktestdata $$opts $$prog $$data >/dev/null 2>&1 || \
 		{ echo "Running './checktestdata $$opts $$prog $$data' did not succeed..." ; exit 1; }
