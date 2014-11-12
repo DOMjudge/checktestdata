@@ -3,4 +3,4 @@ set -x
 set -e
 aclocal -I m4
 autoconf
-./configure
+./configure --disable-parsergeneration
