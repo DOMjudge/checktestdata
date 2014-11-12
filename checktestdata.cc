@@ -1,8 +1,5 @@
 /*
    Checktestdata -- check testdata according to specification.
-   Copyright (C) 2008-2012 Jan Kuipers
-   Copyright (C) 2009-2012 Jaap Eldering (eldering@a-eskwadraat.nl).
-   Copyright (C) 2012 Tobias Werth (werth@cs.fau.de)
 
    For detailed information, see libchecktestdata.
 
@@ -21,8 +18,6 @@
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "config.h"
-
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -34,7 +29,7 @@ using namespace std;
 
 #define PROGRAM "checktestdata"
 #define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
-#define VERSION DOMJUDGE_VERSION "/" REVISION
+#define VERSION CTD_VERSION "/" REVISION
 
 const int exit_testdata = 1;
 

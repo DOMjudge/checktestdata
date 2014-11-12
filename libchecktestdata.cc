@@ -1,8 +1,5 @@
 /*
    Libchecktestdata -- check testdata according to specification.
-   Copyright (C) 2008-2012 Jan Kuipers
-   Copyright (C) 2009-2013 Jaap Eldering (eldering@a-eskwadraat.nl).
-   Copyright (C) 2012 Tobias Werth (werth@cs.fau.de)
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,8 +17,6 @@
 
  */
 
-#include "config.h"
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -37,16 +32,8 @@
 #include <getopt.h>
 #include <sys/time.h>
 #include <cstdlib>
-#ifdef HAVE_BOOST_REGEX
 #include <boost/regex.hpp>
-#else
-#error "Libboost regex library not available."
-#endif
-#ifdef HAVE_GMPXX_H
 #include <gmpxx.h>
-#else
-#error "LibGMP C++ extensions not available."
-#endif
 
 #include "parser.h"
 #include "libchecktestdata.h"
@@ -55,7 +42,7 @@ using namespace std;
 
 #define PROGRAM "checktestdata"
 #define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
-#define VERSION DOMJUDGE_VERSION "/" REVISION
+#define VERSION CTD_VERSION "/" REVISION
 
 enum value_type { value_none, value_int, value_flt, value_str };
 
