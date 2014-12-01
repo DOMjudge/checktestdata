@@ -67,10 +67,8 @@ Bransen, Jaap Eldering, Jan Kuipers, and Tobias Werth; see the git commits for
 a complete list of contributors.
 
 Checktestdata, including its documentation, is free software; you can
-redistribute it and/or modify it under the terms of the GNU General
-Public License as published by the Free Software Foundation; either
-version 2, or (at your option) any later version. See the file
-[COPYING](COPYING).
+redistribute it and/or modify it under the terms of the two-clause
+BSD license. See the file [COPYING](COPYING).
 
 The M4 autoconf macros are licenced under all-permissive and GPL3+
 licences; see the respective files under m4/ for details.
