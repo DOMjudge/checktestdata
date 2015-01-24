@@ -6,5 +6,5 @@ configure
 lex.cc
 parse.cc
 parserbase.h
-paths.mk
+config.mk
 scannerbase.h

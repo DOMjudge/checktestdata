@@ -73,5 +73,5 @@ if test "x$enable_static_linking" = "xyes"; then
 	AC_SUBST(STATIC_LINK_END,  [-Wl,-Bdynamic])
 fi
 
-AC_CONFIG_FILES([paths.mk])
+AC_CONFIG_FILES([config.mk])
 AC_OUTPUT

@@ -1,4 +1,4 @@
--include paths.mk
+-include config.mk
 
 # Determine revision info:
 REVISION = $(shell \
@@ -34,7 +34,7 @@ build: $(TARGETS) $(SUBST_FILES)
 # These are build during dist stage, and this is independent of
 # whether checktestdata is enabled after configure.
 ifeq ($(PARSERGEN_ENABLED),yes)
-$(PARSER_GEN): paths.mk
+$(PARSER_GEN): config.mk
 
 lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
 	flexc++ $<
@@ -50,10 +50,10 @@ checksucc = ./checktestdata $$opts $$prog $$data >/dev/null 2>&1 || \
 checkfail = ./checktestdata $$opts $$prog $$data >/dev/null 2>&1 && \
 		{ echo "Running './checktestdata $$opts $$prog $$data' did not fail..."    ; exit 1; }
 
-paths.mk: paths.mk.in
-	$(error run ./bootstrap and/or configure to create paths.mk)
+config.mk: config.mk.in
+	$(error run ./bootstrap and/or configure to create config.mk)
 
-libchecktestdata.o: paths.mk
+libchecktestdata.o: config.mk
 libchecktestdata.o: $(PARSER_GEN)
 libchecktestdata.o: %.o: %.cc %.h parser.h
 
