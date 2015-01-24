@@ -18,9 +18,9 @@ according to which the testdata is checked.  Two sample scripts
 
 Requirements:
 
- * recent g++ (> 4.8)
- * boost
- * boost-regex
+ * recent g++ (>= 4.7)
+ * Libboost and the boost::regex extension
+ * The GNU GMP libraries (http://gmplib.org/)
  * flexc++/bisonc++ (optional)
 
 If you don't have `flexc++` and/or `bisonc++` available, you may use the release
@@ -61,7 +61,7 @@ anything.
 
 ## Copyright & Licencing
 
-Checktestdata is Copyright &copy; 2008 - 2014 by the checktestdata developers and
+Checktestdata is Copyright &copy; 2008 - 2015 by the checktestdata developers and
 all respective contributors. The current checktestdata developers are Jeroen
 Bransen, Jaap Eldering, Jan Kuipers, and Tobias Werth; see the git commits for
 a complete list of contributors.
