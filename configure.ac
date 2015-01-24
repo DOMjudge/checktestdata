@@ -37,14 +37,14 @@ AC_PROG_CPP
 
 # check for Boost library
 AX_BOOST_BASE([1.33.1],[],[
-	AC_MSG_ERROR([Boost not found (required for checktestdata)])])
+	AC_MSG_ERROR([Boost not found])])
 AX_BOOST_REGEX
 
 # Check for gmpxx headers separately, as they are C++.
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([gmpxx.h])
 AC_CHECK_LIB(gmpxx,abs,AC_SUBST(LIBGMPXX,'-lgmpxx -lgmp'),[
-	AC_MSG_ERROR([GMPlib not found (required for checktestdata)])],[-lgmp])
+	AC_MSG_ERROR([GMPlib not found])],[-lgmp])
 AC_LANG_POP([C++])
 
 AC_ARG_ENABLE(parsergeneration,AS_HELP_STRING([--disable-parsergeneration],
@@ -66,12 +66,12 @@ fi
 # Check option to link statically against "special" libraries for
 # submit client and checktestdata programs.
 AC_ARG_ENABLE(static-linking,AS_HELP_STRING([--enable-static-linking],
-[enable static linking against libgmpxx,libboost_regex for 'checktestdata' (default: no).]))
+[enable static linking against libgmpxx,libboost_regex (default: no).]))
 
 if test "x$enable_static_linking" = "xyes"; then
 	AC_SUBST(STATIC_LINK_START,[-Wl,-Bstatic])
 	AC_SUBST(STATIC_LINK_END,  [-Wl,-Bdynamic])
 fi
 
-AC_CONFIG_FILES([paths.mk])
+AC_CONFIG_FILES([config.mk])
 AC_OUTPUT

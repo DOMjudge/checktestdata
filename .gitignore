@@ -1,6 +1,8 @@
+*.o
 aclocal.m4
 autom4te.cache/
+checktestdata
 config.log
 config.status
 configure
-paths.mk
+config.mk

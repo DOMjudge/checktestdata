@@ -1,4 +1,4 @@
-# Variables (mostly paths) set by configure.
+# Variables set by configure.
 # This file is globally included via Makefile
 
 # General package variables
