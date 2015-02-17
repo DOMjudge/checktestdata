@@ -26,6 +26,16 @@ Requirements:
 If you don't have `flexc++` and/or `bisonc++` available, you may use the release
 branch where we've pre-generated the scanner/parser files.
 
+Command line for installing the build dependencies on Debian or
+Ubuntu, when using the release branch:
+```
+apt-get install make g++ libboost-regex-dev libgmp3-dev
+```
+For Redhat-like distributions try:
+```
+yum install make g++ boost-devel gmp-devel
+```
+
 To compile checktestdata, run:
 ```
 ./bootstrap
