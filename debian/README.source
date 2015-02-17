@@ -1,0 +1,6 @@
+checktestdata does not make releases, so this package is native.
+The package version is just the date.
+
+It assumes it's built on the "release" branch, but builds just as well on
+"master"; the difference is that the Build-Depends field does not include
+requirements for building on the master branch.

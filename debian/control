@@ -1,0 +1,19 @@
+Source: checktestdata
+Section: misc
+Priority: extra
+Maintainer: Thijs Kinkhorst <thijs@debian.org>
+Build-Depends: debhelper (>= 9), dh-autoreconf, libboost-regex-dev, libgmp3-dev
+Standards-Version: 3.9.6
+Homepage: http://www.domjudge.org/
+Vcs-Git: https://github.com/DOMjudge/checktestdata.git
+Vcs-Browser: https://github.com/DOMjudge/checktestdata
+
+Package: checktestdata
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: checks integrity of test data in programming contests
+ Checktestdata is a tool to verify the syntactical integrity of test cases in
+ programming contests like the ACM ICPC.
+ .
+ It allows you to specify a simple grammar for your testdata input files,
+ according to which the testdata is checked.
