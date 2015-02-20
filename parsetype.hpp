@@ -1,5 +1,5 @@
-#ifndef PARSETYPE_H
-#define PARSETYPE_H
+#ifndef PARSETYPE_HPP
+#define PARSETYPE_HPP
 
 #include <string>
 #include <vector>
@@ -14,7 +14,9 @@ typedef parse_t command;
 typedef parse_t expr;
 typedef parse_t test;
 
-extern std::vector<command> program;
+namespace checktestdata {
+extern std::vector<command> program; // FIXME: in checktestdata namespace
+}
 
 std::ostream &operator<<(std::ostream &, const parse_t &);
 
@@ -119,4 +121,4 @@ struct parse_t {
 	const char *c_str() { return val.c_str(); }
 };
 
-#endif
+#endif /* PARSETYPE_HPP */

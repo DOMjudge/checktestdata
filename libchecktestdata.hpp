@@ -2,10 +2,12 @@
  * Library to verify testdata or program output syntax.
  */
 
-#ifndef LIBCHECKTESTDATA_H
-#define LIBCHECKTESTDATA_H
+#ifndef LIBCHECKTESTDATA_HPP
+#define LIBCHECKTESTDATA_HPP
 
 #include <iostream>
+
+namespace checktestdata {
 
 const int exit_failure = 2;
 
@@ -37,4 +39,6 @@ void gentestdata(std::ostream &datastream);
  * parse_preset_list().
  */
 
-#endif /* LIBCHECKTESTDATA_H */
+} // namespace checktestdata
+
+#endif /* LIBCHECKTESTDATA_HPP */

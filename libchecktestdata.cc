@@ -23,9 +23,11 @@
 #include <gmpxx.h>
 
 #include "parser.h"
-#include "libchecktestdata.h"
+#include "libchecktestdata.hpp"
 
 using namespace std;
+
+namespace checktestdata {
 
 enum value_type { value_none, value_int, value_flt, value_str };
 
@@ -1211,3 +1213,5 @@ bool parse_preset_list(std::string list)
 
 	return true;
 }
+
+} // namespace checktestdata

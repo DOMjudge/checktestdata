@@ -11,9 +11,10 @@
 #include <fstream>
 #include <getopt.h>
 
-#include "libchecktestdata.h"
+#include "libchecktestdata.hpp"
 
 using namespace std;
+using namespace checktestdata;
 
 #define PROGRAM "checktestdata"
 #define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
