@@ -27,10 +27,6 @@
 
 using namespace std;
 
-#define PROGRAM "checktestdata"
-#define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
-#define VERSION CTD_VERSION "/" REVISION
-
 enum value_type { value_none, value_int, value_flt, value_str };
 
 struct value_t {
