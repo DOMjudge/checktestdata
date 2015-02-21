@@ -1,17 +1,7 @@
 -include config.mk
 
-# Determine revision info:
-REVISION = $(shell \
-if [ -n "$(PUBLISHED)" ]; then \
-	echo "$(PUBLISHED)" ; \
-elif git describe >/dev/null 2>&1 ; then \
-	git describe --long | sed 's/^.*-//' ; \
-else \
-	echo 'unknown' ; \
-fi )
-
-CFLAGS   += -DCTD_VERSION="\"$(VERSION)\"" -DREVISION="\"$(REVISION)\""
-CXXFLAGS += -DCTD_VERSION="\"$(VERSION)\"" -DREVISION="\"$(REVISION)\""
+CFLAGS   += -DVERSION="\"$(VERSION)\""
+CXXFLAGS += -DVERSION="\"$(VERSION)\""
 
 CXXFLAGS += -std=c++11
 

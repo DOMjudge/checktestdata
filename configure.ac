@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([checktestdata],[5.0],
+AC_INIT([checktestdata],m4_esyscmd([date '+%Y%m%d' | tr -d '\n']]),
 	[domjudge-devel@lists.A-Eskwadraat.nl])
 AC_PREREQ([2.64])
 AC_CONFIG_SRCDIR([checktestdata.cc])
