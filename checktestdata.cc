@@ -18,7 +18,9 @@ using namespace checktestdata;
 
 #define PROGRAM "checktestdata"
 #define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
-#define VERSION CTD_VERSION "/" REVISION
+#ifndef VERSION
+#define VERSION "unknown"
+#endif
 
 const int exit_testdata = 1;
 
