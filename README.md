@@ -49,7 +49,7 @@ files on the release branch.
 ## Library
 
 The commandline program is built upon the separate library
-`libchecktestdata.h` (see `checktestdata.cc` as an example for how to use this
+`libchecktestdata.hpp` (see `checktestdata.cc` as an example for how to use this
 library) that can be used to write the syntax checking part of special compare
 scripts. It can easily handle the tedious task of verifying that a team's
 submission output is syntactically valid, leaving just the task of semantic
