@@ -1,4 +1,4 @@
-#include "parsetype.h"
+#include "parsetype.hpp"
 
 std::ostream &operator<<(std::ostream &out, const parse_t &obj)
 {

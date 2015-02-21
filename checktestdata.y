@@ -1,4 +1,4 @@
-%baseclass-preinclude "parsetype.h"
+%baseclass-preinclude "parsetype.hpp"
 
 %filenames parser
 
@@ -29,7 +29,7 @@ commands:
 |
 	commands command
 {
-	program.push_back($2);
+	checktestdata::program.push_back($2);
 }
 ;
 

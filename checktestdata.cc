@@ -1,5 +1,5 @@
 /*
-   Checktestdata -- check testdata according to specification.
+   Checktestdata -- syntactically check testdata according to a specified grammar.
 
    For detailed information, see libchecktestdata.
 
@@ -11,9 +11,10 @@
 #include <fstream>
 #include <getopt.h>
 
-#include "libchecktestdata.h"
+#include "libchecktestdata.hpp"
 
 using namespace std;
+using namespace checktestdata;
 
 #define PROGRAM "checktestdata"
 #define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
@@ -39,12 +40,13 @@ struct option const long_opts[] = {
 
 void version()
 {
-        printf("%s -- written by %s\n",PROGRAM,AUTHORS);
-        printf("Version %s, included with DOMjudge.\n\n",VERSION);
+        printf("%s -- version %s, written by %s\n\n",PROGRAM,VERSION,AUTHORS);
         printf(
-"%s comes with ABSOLUTELY NO WARRANTY.  This is free software, and you\n"
-"are welcome to redistribute it under certain conditions.  See the GNU\n"
-"General Public Licence for details.\n",PROGRAM);
+"Copyright (c) 2008 - 2015 by the checktestdata developers and all\n"
+"respective contributors. All rights reserved.\n"
+"%s comes with ABSOLUTELY NO WARRANTY and is provided \"as is\".\n"
+"You are free to modify and redistribute this program under the conditions\n"
+"of the 2-clause BSD licence, see the file COPYING for more details.\n",PROGRAM);
 }
 
 void usage()
@@ -64,7 +66,7 @@ void usage()
 "  -d, --debug          enable extra debugging output\n"
 "  -q, --quiet          don't display testdata error messages: test exitcode\n"
 "      --help           display this help and exit\n"
-"      --version        output version information and exit\n"
+"      --version        output version and copyright information and exit\n"
 "\n",progname);
 }
 

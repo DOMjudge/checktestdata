@@ -10,7 +10,7 @@ else \
 	echo 'unknown' ; \
 fi )
 
-CFLAGS += -DCTD_VERSION="\"$(VERSION)\"" -DREVISION="\"$(REVISION)\""
+CFLAGS   += -DCTD_VERSION="\"$(VERSION)\"" -DREVISION="\"$(REVISION)\""
 CXXFLAGS += -DCTD_VERSION="\"$(VERSION)\"" -DREVISION="\"$(REVISION)\""
 
 CXXFLAGS += -std=c++11
@@ -40,7 +40,7 @@ lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
 	flexc++ $<
 	$(call INSERT_VERSION,FLEXCPP_VERSION,$(shell flexc++ --version))
 
-parse.cc parserbase.h: checktestdata.y parser.h parser.ih parsetype.h
+parse.cc parserbase.h: checktestdata.y parser.h parser.ih parsetype.hpp
 	bisonc++ $<
 	$(call INSERT_VERSION,BISONCPP_VERSION,$(shell bisonc++ --version))
 endif
@@ -55,7 +55,7 @@ config.mk: config.mk.in
 
 libchecktestdata.o: config.mk
 libchecktestdata.o: $(PARSER_GEN)
-libchecktestdata.o: %.o: %.cc %.h parser.h
+libchecktestdata.o: %.o: %.cc %.hpp parser.h
 
 checktestdata: CPPFLAGS += $(BOOST_CPPFLAGS)
 checktestdata: LDFLAGS  += $(BOOST_LDFLAGS) $(STATIC_LINK_START) $(LIBGMPXX) $(BOOST_REGEX_LIB) $(STATIC_LINK_END)

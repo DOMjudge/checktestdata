@@ -23,13 +23,11 @@
 #include <gmpxx.h>
 
 #include "parser.h"
-#include "libchecktestdata.h"
+#include "libchecktestdata.hpp"
 
 using namespace std;
 
-#define PROGRAM "checktestdata"
-#define AUTHORS "Jan Kuipers, Jaap Eldering, Tobias Werth"
-#define VERSION CTD_VERSION "/" REVISION
+namespace checktestdata {
 
 enum value_type { value_none, value_int, value_flt, value_str };
 
@@ -1215,3 +1213,5 @@ bool parse_preset_list(std::string list)
 
 	return true;
 }
+
+} // namespace checktestdata
