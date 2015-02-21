@@ -10,3 +10,5 @@ parse.cc
 parserbase.h
 config.mk
 scannerbase.h
+checktestdata-scan.tar.xz
+cov-int/
