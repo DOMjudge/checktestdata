@@ -86,7 +86,7 @@ check: checktestdata
 
 coverage:
 	$(MAKE) clean
-	$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)"
+	$(MAKE) CXXFLAGS='$(COVERAGE_CXXFLAGS)'
 	$(MAKE) check
 	gcov checktestdata.cc libchecktestdata.cc libchecktestdata.hpp
 
@@ -104,3 +104,5 @@ clean:
 
 distclean: clean
 	-rm -f $(PARSER_GEN)
+
+.PHONY: coverage coverage-clean coverage-report
