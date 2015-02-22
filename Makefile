@@ -5,6 +5,8 @@ CXXFLAGS += -DVERSION="\"$(VERSION)\""
 
 CXXFLAGS += -std=c++11
 
+COVERAGE_CXXFLAGS = $(CXXFLAGS) -fprofile-arcs -ftest-coverage
+
 TARGETS = checktestdata
 CHKOBJS = $(addsuffix $(OBJEXT),libchecktestdata parse lex parsetype)
 OBJECTS = $(CHKOBJS)
@@ -81,6 +83,19 @@ check: checktestdata
 		for i in seq 10 ; do opts=-g ; $(checksucc) ; opts='' ; $(checksucc) ; done ; \
 	done ; \
 	rm -f $$TMP
+
+coverage:
+	$(MAKE) clean
+	$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)"
+	$(MAKE) check
+	gcov checktestdata.cc libchecktestdata.cc libchecktestdata.hpp
+
+coverage-clean:
+	rm -f *.gcda *.gcno *.gcov coverage*.html
+
+# Requires gcovr
+coverage-report: coverage
+	gcovr -g -r . --html --html-details -o coverage.html
 
 dist: $(PARSER_GEN)
 
