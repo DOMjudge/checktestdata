@@ -1,2 +1,4 @@
+# This checktestdata script tests output of a trivial problem where
+# simply the number '1' followed by a newline is expected as output.
 INT(1,1) NEWLINE
 EOF
