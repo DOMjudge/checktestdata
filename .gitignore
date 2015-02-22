@@ -5,10 +5,10 @@ checktestdata
 config.log
 config.status
 configure
+config.mk
 lex.cc
 parse.cc
 parserbase.h
-config.mk
 scannerbase.h
 checktestdata-scan.tar.xz
 cov-int/
