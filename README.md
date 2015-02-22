@@ -6,7 +6,7 @@ programming contests like the ACM ICPC.
 
 It allows you to specify a simple grammar for your testdata input files,
 according to which the testdata is checked.  Two sample scripts
-`checktestdata.{hello,fltcmp}` are provided for
+`hello.ctd` and `fltcmp.ctd` are provided for
 [DOMjudge](http://www.domjudge.org/) sample problems *hello* and *fltcmp*.
 
 ## Grammar specification
