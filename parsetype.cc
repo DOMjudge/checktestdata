@@ -14,8 +14,8 @@ std::ostream &operator<<(std::ostream &out, const parse_t &obj)
 	case '(':                   op = '#'; break;
 	case 'E': out << "ISEOF";   op = '#'; break;
 	case 'M': out << "MATCH";   op = '#'; break;
-	case 'U': out << "UNIQUE";  op = '#'; break;
-	case 'A': out << "INARRAY"; op = '#'; break;
+	case 'U': out << "UNIQUE";  op = ','; break;
+	case 'A': out << "INARRAY"; op = ','; break;
 	}
 
 	// Special case quote strings

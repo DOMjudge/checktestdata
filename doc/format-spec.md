@@ -69,9 +69,9 @@ boolean value. These are:
     coordinates, then <tt>UNIQUE(x,y)</tt> checks that the points
     (x[i],y[i]) in the plane are unique.</dd>
 
-<dt><tt>INARRAY(&lt;value&gt; val, &lt;varname&gt; array)</tt></dt>
+<dt><tt>INARRAY(&lt;value&gt; val, &lt;varname&gt; var)</tt></dt>
 
-<dd>Checks if val occurs in one of the indices of array.</dd>
+<dd>Checks if val occurs in the array variable var.</dd>
 </dl>
 
 The following commands are available:
