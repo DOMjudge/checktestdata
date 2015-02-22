@@ -1,0 +1,5 @@
+REP(4)
+	STRING("AB")
+	REGEX("C.EFG")
+	NEWLINE
+END
