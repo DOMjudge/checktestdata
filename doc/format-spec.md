@@ -21,8 +21,8 @@ The following grammar sub-elements are defined:
     compare  := '<' | '>' | '<=' | '>=' | '==' | '!='
     logical  := '&&' | '||'
     expr     := <term> | <expr> [+-] <term>
-    term     := <term> [*%/] <factor> | <factor>
-    factor   := <value> | '-' <term> | '(' <expr> ')' | <factor> '^' <factor>
+    term     := <factor> | <term> [*%/] <factor>
+    factor   := <value> | '-' <factor> | '(' <expr> ')' | <factor> '^' <factor>
     test     := '!' <test> | <test> <logical> <test> | '(' <test> ')' |
                  <expr> <compare> <expr> | <testcommand>
 
@@ -112,7 +112,7 @@ The following commands are available:
 
 <dd>Assert that 'condition' is true, fail otherwise.</dd>
 
-<dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value])</tt></dt>
+<dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value)</tt></dt>
 
 <dd>Assign 'value' to variable 'name'.</dd>
 
