@@ -20,6 +20,9 @@ class Parser: public ParserBase
         Parser(std::istream& in): d_scanner(in) {}
         int parse();
 
+        // The final result of parsing:
+        parse_t parseResult;
+
     private:
         void error(char const *msg);    // called on (syntax) errors
         int lex();                      // returns the next token from the

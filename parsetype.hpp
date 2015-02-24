@@ -14,10 +14,6 @@ typedef parse_t command;
 typedef parse_t expr;
 typedef parse_t test;
 
-namespace checktestdata {
-extern std::vector<command> program; // FIXME: in checktestdata namespace
-}
-
 std::ostream &operator<<(std::ostream &, const parse_t &);
 
 struct parse_t {
@@ -73,7 +69,7 @@ struct parse_t {
 		switch ( op ) {
 		case 'l': // list: create new or append one argument
 			if ( arg2.op=='~' ) {
-				args.push_back(arg1);
+				if ( arg1.op!='~' ) args.push_back(arg1);
 			} else {
 				args = arg1.args;
 				args.push_back(arg2);

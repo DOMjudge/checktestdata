@@ -24,13 +24,13 @@
 
 %%
 
+start:
+    commands                                         { parseResult = $1; }
+;
+
 commands:
-	// empty
-|
-	commands command
-{
-	checktestdata::program.push_back($2);
-}
+    /* empty */                                      { $$ = parse_t('l'); }
+|   commands command                                 { $$ = parse_t('l',$1,$2); }
 ;
 
 command:

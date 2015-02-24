@@ -136,6 +136,8 @@ void readprogram(istream &in)
 		exit(exit_failure);
 	}
 
+	program = parseprog.parseResult.args;
+
 	// Add (implicit) EOF command at end of input
 	program.push_back(command("EOF"));
 
