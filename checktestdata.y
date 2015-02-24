@@ -49,7 +49,7 @@ command:
 |	CMD_REGEX  '(' value ')'                         { $$ = parse_t($1,$3); }
 |	CMD_REGEX  '(' value ',' variable ')'            { $$ = parse_t($1,$3,$5); }
 |	CMD_ASSERT '(' test ')'                          { $$ = parse_t($1,$3); }
-|	CMD_SET    '(' variable '=' expr ')'             { $$ = parse_t($1,$3,$5); }
+|	CMD_SET    '(' assignlist ')'                    { $$ = parse_t('@',$1,$3); }
 |	CMD_UNSET  '(' varlist ')'                       { $$ = parse_t('@',$1,$3); }
 |	CMD_REP    '(' expr ')'                          { $$ = parse_t($1,$3); }
 |	CMD_REP    '(' expr ',' command ')'              { $$ = parse_t($1,$3,$5); }
@@ -88,6 +88,15 @@ exprlist:
 varlist:
 	VARNAME                  { $$ = parse_t('l',$1); }
 |	varlist ',' VARNAME      { $$ = parse_t('l',$1,$3); }
+;
+
+varassign:
+    variable '=' expr        { $$ = parse_t('a',$1,$3); }
+;
+
+assignlist:
+    varassign                { $$ = parse_t('l',$1); }
+|   assignlist ',' varassign { $$ = parse_t('l',$1,$3); }
 ;
 
 compare: CMP_LT | CMP_GT | CMP_LE | CMP_GE | CMP_EQ | CMP_NE ;

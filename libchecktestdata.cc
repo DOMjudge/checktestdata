@@ -837,7 +837,9 @@ void gentoken(command cmd, ostream &datastream)
 	}
 
 	else if ( cmd.name()=="SET" ) {
-		setvar(cmd.args[0],eval(cmd.args[1]));
+		for(size_t i=0; i<cmd.args.size(); i++) {
+			setvar(cmd.args[i].args[0],eval(cmd.args[i].args[1]));
+		}
 	}
 
 	else if ( cmd.name()=="UNSET" ) {
@@ -974,7 +976,9 @@ void checktoken(command cmd)
 	}
 
 	else if ( cmd.name()=="SET" ) {
-		setvar(cmd.args[0],eval(cmd.args[1]));
+		for(size_t i=0; i<cmd.args.size(); i++) {
+			setvar(cmd.args[i].args[0],eval(cmd.args[i].args[1]));
+		}
 	}
 
 	else if ( cmd.name()=="UNSET" ) {

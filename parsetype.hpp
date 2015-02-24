@@ -34,6 +34,7 @@ struct parse_t {
 	  |&!    logical AND,OR,NOT
 	  EMUA   EOF,MATCH,UNIQUE,INARRAY keywords used within test expressions
 
+	  a      variable assigment with two arguments: variable name, expression.
 	  l      list of expressions (e.g. for array indices or argument list)
 	  v      variable with array indices in second argument
 	  s      string constant
@@ -83,6 +84,11 @@ struct parse_t {
 		case 'f':
 		case 's':
 			val = arg1.val;
+			break;
+
+		case 'a': // variable assignment
+			args.push_back(arg1);
+			args.push_back(arg2);
 			break;
 
 		case 'v': // variable, read index from arg2 if present

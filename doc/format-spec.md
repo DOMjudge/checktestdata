@@ -114,9 +114,9 @@ The following commands are available:
 
 <dd>Assert that 'condition' is true, fail otherwise.</dd>
 
-<dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value)</tt></dt>
+<dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value[, ...])</tt></dt>
 
-<dd>Assign 'value' to variable 'name'.</dd>
+<dd>Assign 'value' to variable 'name', etc...</dd>
 
 <dt><tt>UNSET(&lt;varname&gt; a [,&lt;varname&gt; b ...])</tt></dt>
 
