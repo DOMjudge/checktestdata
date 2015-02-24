@@ -45,9 +45,9 @@ command:
 |	CMD_FLOAT  '(' expr ',' expr ',' variable ')'    { $$ = parse_t($1,$3,$5,$7); }
 |	CMD_FLOAT  '(' expr ',' expr ',' variable ',' opt_float ')'
 	                                                 { $$ = parse_t($1,$3,$5,$7,$9); }
-|	CMD_STRING '(' string ')'                        { $$ = parse_t($1,$3); }
-|	CMD_REGEX  '(' string ')'                        { $$ = parse_t($1,$3); }
-|	CMD_REGEX  '(' string ',' variable ')'           { $$ = parse_t($1,$3,$5); }
+|	CMD_STRING '(' value ')'                         { $$ = parse_t($1,$3); }
+|	CMD_REGEX  '(' value ')'                         { $$ = parse_t($1,$3); }
+|	CMD_REGEX  '(' value ',' variable ')'            { $$ = parse_t($1,$3,$5); }
 |	CMD_ASSERT '(' test ')'                          { $$ = parse_t($1,$3); }
 |	CMD_SET    '(' variable '=' expr ')'             { $$ = parse_t($1,$3,$5); }
 |	CMD_UNSET  '(' varlist ')'                       { $$ = parse_t('@',$1,$3); }
@@ -119,7 +119,7 @@ test:
 |	test LOGIC_OR  test                     { $$ = parse_t('|',$1,$3); }
 |	expr compare expr                       { $$ = parse_t('?',$2,$1,$3); }
 |	TEST_EOF                                { $$ = parse_t('E'); }
-|	TEST_MATCH '(' string ')'               { $$ = parse_t('M',$3); }
+|	TEST_MATCH '(' value ')'                { $$ = parse_t('M',$3); }
 |	TEST_UNIQUE '(' varlist ')'             { $$ = parse_t('U',$3); }
 |	TEST_INARRAY '(' expr ',' variable ')'  { $$ = parse_t('A',$3,$5); }
 ;

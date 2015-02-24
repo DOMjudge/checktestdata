@@ -825,7 +825,7 @@ void gentoken(command cmd, ostream &datastream)
 	}
 
 	else if ( cmd.name()=="REGEX" ) {
-		string regex = cmd.args[0];
+		string regex = eval(cmd.args[0]).getstr();
 //		boost::regex e1(regex, boost::regex::extended); // this is only to check the expression
 		string str = genregex(regex);
 		datastream << str;
@@ -946,13 +946,15 @@ void checktoken(command cmd)
 	}
 
 	else if ( cmd.name()=="REGEX" ) {
-		boost::regex regexstr(string(cmd.args[0]));
+		string str = eval(cmd.args[0]).getstr();
+		boost::regex regexstr(str);
 		boost::match_results<string::const_iterator> res;
 		string matchstr;
 
 		if ( !boost::regex_search((string::const_iterator)&data[datanr],
 		                          (string::const_iterator)data.end(),
-								  res,regexstr,boost::match_continuous) ) {
+		                          res,regexstr,
+		                          boost::match_continuous|boost::match_not_dot_newline) ) {
 			error();
 		} else {
 			size_t matchend = size_t(res[0].second-data.begin());
@@ -962,7 +964,7 @@ void checktoken(command cmd)
 				if ( data[datanr]=='\n' ) linenr++, charnr=0;
 			}
 		}
-		debug("'%s' = '%s'",matchstr.c_str(),cmd.args[0].c_str());
+		debug("'%s' = '%s'",matchstr.c_str(),str.c_str());
 
 		if ( cmd.nargs()>=2 ) setvar(cmd.args[1],value_t(matchstr));
 	}
