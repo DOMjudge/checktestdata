@@ -17,7 +17,8 @@ class Parser: public ParserBase
 
     public:
         Parser(): d_scanner() {}
-        Parser(std::istream& in): d_scanner(in) {}
+        Parser(std::istream& in, int startState = 0): d_scanner(in)
+	        { d_scanner.parserStart = startState; }
         int parse();
 
         // The final result of parsing:

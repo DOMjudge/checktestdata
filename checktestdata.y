@@ -17,6 +17,9 @@
 %token VARNAME INTEGER FLOAT STRING
 %token OPT_FIXED OPT_SCIENTIFIC
 
+// Fake tokens to allow parsing with non-default start symbol:
+%token PARSE_ASSIGNLIST
+
 %left LOGIC_AND LOGIC_OR
 %left '+' '-'
 %left '*' '/' '%'
@@ -26,6 +29,7 @@
 
 start:
     commands                                         { parseResult = $1; }
+|   PARSE_ASSIGNLIST assignlist                      { parseResult = $2; }
 ;
 
 commands:

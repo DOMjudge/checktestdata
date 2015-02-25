@@ -23,6 +23,10 @@ class ScannerException: public std::exception {
 class Scanner: public ScannerBase
 {
     public:
+	    // Non-zero value indicates that we return that as custom
+	    // start token to the parser in the first call of lex().
+        int parserStart;
+
         explicit Scanner(std::istream &in = std::cin,
                          std::ostream &out = std::cout);
 
@@ -49,17 +53,22 @@ class Scanner: public ScannerBase
 // $insert scannerConstructors
 inline Scanner::Scanner(std::istream &in, std::ostream &out)
 :
-    ScannerBase(in, out)
+    ScannerBase(in, out), parserStart(0)
 {}
 
 inline Scanner::Scanner(std::string const &infile, std::string const &outfile)
 :
-    ScannerBase(infile, outfile)
+    ScannerBase(infile, outfile), parserStart(0)
 {}
 
 // $insert inlineLexFunction
 inline int Scanner::lex()
 {
+	if ( parserStart!=0 ) {
+		int res = parserStart;
+		parserStart = 0;
+		return res;
+	}
     return lex__();
 }
 
