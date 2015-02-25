@@ -554,12 +554,12 @@ bool dotest(test t)
 	case '&': return dotest(t.args[0]) && dotest(t.args[1]);
 	case '|': return dotest(t.args[0]) || dotest(t.args[1]);
 	case 'E': if ( gendata ) {
-			  return (rand() % 10 < 3);
+			  return (random() % 10 < 3);
 		  } else {
 			  return datanr>=data.size();
 		  }
 	case 'M': if ( gendata ) {
-			  return (rand() % 2 == 0);
+			  return (random() % 2 == 0);
 		  } else {
 			  return datanr<data.size() && t.args[0].val.find(data[datanr])!=string::npos;
 		  }
@@ -661,7 +661,7 @@ int getmult(string &exp, unsigned int &index)
 		max = 1;
 	}
 
-	return (min + rand() % (1 + max - min));
+	return (min + random() % (1 + max - min));
 }
 
 string genregex(string exp)
@@ -684,7 +684,7 @@ string genregex(string exp)
 			{
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += (char) (' ' + (rand() % (int) ('~' - ' ')));
+					res += (char) (' ' + (random() % (int) ('~' - ' ')));
 				}
 			}
 			break;
@@ -722,7 +722,7 @@ string genregex(string exp)
 				copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += possibleVec[rand() % possibleVec.size()];
+					res += possibleVec[random() % possibleVec.size()];
 				}
 			}
 			break;
@@ -751,7 +751,7 @@ string genregex(string exp)
 				alternatives.push_back(exp.substr(begin, i - begin));
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += genregex(alternatives[rand() % alternatives.size()]);
+					res += genregex(alternatives[random() % alternatives.size()]);
 				}
 			}
 			break;
@@ -1162,7 +1162,7 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 	unsigned long seed;
 	gettimeofday(&time,NULL);
 	seed = (time.tv_sec * 1000) + (time.tv_usec % 1000);
-	srand(seed);
+	srandom(seed);
 	gmp_rnd.seed(seed);
 
 	// Initialize current position in program and data.
