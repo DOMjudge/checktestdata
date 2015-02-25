@@ -270,6 +270,9 @@ value_t getvar(expr var, int use_preset = 0)
 		}
 		return value_t();
 	} else {
+		if ( gendata && preset.count(var.val) && preset[var.val].count(ind) ) {
+			return preset[var.val][ind];
+		}
 		if ( variable.count(var.val) && variable[var.val].count(ind) ) {
 			return variable[var.val][ind];
 		}
