@@ -33,10 +33,11 @@ bool checksyntax(std::istream &datastream);
  * Returns 'true' if the syntax is completely valid.
  */
 
-void gentestdata(std::ostream &datastream);
+bool gentestdata(std::ostream &datastream);
 /* Generate random testdata according to specified syntax.
  * Optionally, certain variable values can be preset by first calling
  * parse_preset_list().
+ * Returns 'true' if testdata was successfully created.
  */
 
 } // namespace checktestdata

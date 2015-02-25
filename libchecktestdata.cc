@@ -1165,11 +1165,18 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 	extra_ws = 0;
 }
 
-void gentestdata(ostream &datastream)
+bool gentestdata(ostream &datastream)
 {
 	// Generate random testdata
 	gendata = 1;
-	checktestdata(datastream);
+
+	try {
+		checktestdata(datastream);
+	} catch (generate_exception) {
+		return false;
+	}
+
+	return true;
 }
 
 bool checksyntax(istream &datastream)
