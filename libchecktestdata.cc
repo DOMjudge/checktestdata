@@ -297,6 +297,13 @@ void setvar(expr var, value_t val, int use_preset = 0)
 	}
 }
 
+void setvars(vector<parse_t> varlist, int use_preset = 0)
+{
+	for(size_t i=0; i<varlist.size(); i++) {
+		setvar(varlist[i].args[0],eval(varlist[i].args[1]),use_preset);
+	}
+}
+
 void unsetvars(args_t varlist)
 {
 	for(size_t i=0; i<varlist.size(); i++) {
@@ -847,9 +854,7 @@ void gentoken(command cmd, ostream &datastream)
 	}
 
 	else if ( cmd.name()=="SET" ) {
-		for(size_t i=0; i<cmd.args.size(); i++) {
-			setvar(cmd.args[i].args[0],eval(cmd.args[i].args[1]));
-		}
+		setvars(cmd.args);
 	}
 
 	else if ( cmd.name()=="UNSET" ) {
@@ -986,9 +991,7 @@ void checktoken(command cmd)
 	}
 
 	else if ( cmd.name()=="SET" ) {
-		for(size_t i=0; i<cmd.args.size(); i++) {
-			setvar(cmd.args[i].args[0],eval(cmd.args[i].args[1]));
-		}
+		setvars(cmd.args);
 	}
 
 	else if ( cmd.name()=="UNSET" ) {
@@ -1205,34 +1208,24 @@ bool checksyntax(istream &datastream)
 }
 
 // This doesn't support variables with indices (yet?).
-bool parse_preset_list(std::string list)
+bool parse_preset_list(std::string str)
 {
-	size_t pos = 0, sep1, sep2;
-	string name, val_str;
-	value_t value;
+	std::istringstream in(str);
+	Parser parselist(in, (int)Parser::PARSE_ASSIGNLIST);
 
-	debug("parsing preset list '%s'", list.c_str());
+	debug("parsing preset list '%s'", str.c_str());
 
-	while ( pos<list.length() ) {
-		if ( ( sep1=list.find('=', pos) )==string::npos ) return false;
-		if ( ( sep2=list.find(',', pos) )==string::npos ) sep2 = list.length();
-
-		name = list.substr(pos,sep1-pos);
-		val_str = list.substr(sep1+1,sep2-sep1-1);
-		debug("parsing preset '%s' = '%s'",name.c_str(),val_str.c_str());
-
-		try {
-			value = value_t(mpz_class(val_str));
-		} catch ( std::invalid_argument ) {
-			try {
-				value = value_t(mpf_class(val_str));
-			} catch ( ... ) { return false; }
-		} catch ( ... ) { return false; }
-
-		setvar(expr(name),value,1);
-
-		pos = sep2 + 1;
+	try {
+		if ( parselist.parse()!=0 ) {
+			cerr << "parse error reading preset list" << endl;
+			return false;
+		}
+	} catch ( exception& e ) {
+		cerr << "parse error: " << e.what() << endl;
+		return false;
 	}
+
+	setvars(parselist.parseResult.args,1);
 
 	return true;
 }

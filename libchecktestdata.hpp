@@ -21,7 +21,7 @@ void init_checktestdata(std::istream &progstream, int opt_mask = 0);
  * before any other function.
  */
 
-bool parse_preset_list(std::string list);
+bool parse_preset_list(std::string str);
 /* Parse list of variable value assignments, to be used as preset
  * values when calling gentestdata(). Syntax of the list must be:
  *
