@@ -1009,6 +1009,8 @@ void checktoken(command cmd)
 // variable 'gendata').
 void checktestdata(ostream &datastream)
 {
+	datastream << setprecision(float_precision);
+
 	while ( true ) {
 		command cmd = currcmd = program[prognr];
 
@@ -1134,8 +1136,8 @@ void checktestdata(ostream &datastream)
 void init_checktestdata(std::istream &progstream, int opt_mask)
 {
 	// Output floats with high precision:
-	cout << setprecision(10);
-	cerr << setprecision(10);
+	cout << setprecision(float_precision);
+	cerr << setprecision(float_precision);
 	mpf_set_default_prec(256);
 
 	// Check the options bitmask

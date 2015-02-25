@@ -15,6 +15,8 @@ const int opt_whitespace_ok = 1; // ignore additional whitespace
 const int opt_quiet         = 2; // quiet execution: only return status
 const int opt_debugging     = 4; // print additional debugging statements
 
+const int float_precision = 15; // output precision (digits) of floats
+
 void init_checktestdata(std::istream &progstream, int opt_mask = 0);
 /* Initialize libchecktestdata by loading syntax from progstream and
  * setting options from opt_mask bitmask. This function must be called
