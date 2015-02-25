@@ -794,6 +794,8 @@ void gentoken(command cmd, ostream &datastream)
 		mpf_class lo = eval(cmd.args[0]);
 		mpf_class hi = eval(cmd.args[1]);
 
+		// Safe old I/O format flags to restore later
+		ios_base::fmtflags flg = datastream.flags();
 		if ( cmd.nargs()>=4 ) {
 			if ( cmd.args[3].name()=="SCIENTIFIC" ) datastream << scientific;
 			else if ( cmd.args[3].name()=="FIXED" ) datastream << fixed;
@@ -819,6 +821,9 @@ void gentoken(command cmd, ostream &datastream)
 		}
 
 		datastream << x;
+
+		// Restore saved I/O formatting
+		datastream.flags(flg);
 	}
 
 	else if ( cmd.name()=="STRING" ) {
