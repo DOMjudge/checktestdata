@@ -136,6 +136,8 @@ void readprogram(istream &in)
 		exit(exit_failure);
 	}
 
+	program = parseprog.parseResult.args;
+
 	// Add (implicit) EOF command at end of input
 	program.push_back(command("EOF"));
 
@@ -268,6 +270,9 @@ value_t getvar(expr var, int use_preset = 0)
 		}
 		return value_t();
 	} else {
+		if ( gendata && preset.count(var.val) && preset[var.val].count(ind) ) {
+			return preset[var.val][ind];
+		}
 		if ( variable.count(var.val) && variable[var.val].count(ind) ) {
 			return variable[var.val][ind];
 		}
@@ -289,6 +294,13 @@ void setvar(expr var, value_t val, int use_preset = 0)
 		preset[var][ind] = val;
 	} else {
 		variable[var][ind] = val;
+	}
+}
+
+void setvars(vector<parse_t> varlist, int use_preset = 0)
+{
+	for(size_t i=0; i<varlist.size(); i++) {
+		setvar(varlist[i].args[0],eval(varlist[i].args[1]),use_preset);
 	}
 }
 
@@ -542,12 +554,12 @@ bool dotest(test t)
 	case '&': return dotest(t.args[0]) && dotest(t.args[1]);
 	case '|': return dotest(t.args[0]) || dotest(t.args[1]);
 	case 'E': if ( gendata ) {
-			  return (rand() % 10 < 3);
+			  return (random() % 10 < 3);
 		  } else {
 			  return datanr>=data.size();
 		  }
 	case 'M': if ( gendata ) {
-			  return (rand() % 2 == 0);
+			  return (random() % 2 == 0);
 		  } else {
 			  return datanr<data.size() && t.args[0].val.find(data[datanr])!=string::npos;
 		  }
@@ -649,7 +661,7 @@ int getmult(string &exp, unsigned int &index)
 		max = 1;
 	}
 
-	return (min + rand() % (1 + max - min));
+	return (min + random() % (1 + max - min));
 }
 
 string genregex(string exp)
@@ -672,7 +684,7 @@ string genregex(string exp)
 			{
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += (char) (' ' + (rand() % (int) ('~' - ' ')));
+					res += (char) (' ' + (random() % (int) ('~' - ' ')));
 				}
 			}
 			break;
@@ -710,7 +722,7 @@ string genregex(string exp)
 				copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += possibleVec[rand() % possibleVec.size()];
+					res += possibleVec[random() % possibleVec.size()];
 				}
 			}
 			break;
@@ -739,7 +751,7 @@ string genregex(string exp)
 				alternatives.push_back(exp.substr(begin, i - begin));
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += genregex(alternatives[rand() % alternatives.size()]);
+					res += genregex(alternatives[random() % alternatives.size()]);
 				}
 			}
 			break;
@@ -792,6 +804,8 @@ void gentoken(command cmd, ostream &datastream)
 		mpf_class lo = eval(cmd.args[0]);
 		mpf_class hi = eval(cmd.args[1]);
 
+		// Safe old I/O format flags to restore later
+		ios_base::fmtflags flg = datastream.flags();
 		if ( cmd.nargs()>=4 ) {
 			if ( cmd.args[3].name()=="SCIENTIFIC" ) datastream << scientific;
 			else if ( cmd.args[3].name()=="FIXED" ) datastream << fixed;
@@ -817,6 +831,9 @@ void gentoken(command cmd, ostream &datastream)
 		}
 
 		datastream << x;
+
+		// Restore saved I/O formatting
+		datastream.flags(flg);
 	}
 
 	else if ( cmd.name()=="STRING" ) {
@@ -825,7 +842,7 @@ void gentoken(command cmd, ostream &datastream)
 	}
 
 	else if ( cmd.name()=="REGEX" ) {
-		string regex = cmd.args[0];
+		string regex = eval(cmd.args[0]).getstr();
 //		boost::regex e1(regex, boost::regex::extended); // this is only to check the expression
 		string str = genregex(regex);
 		datastream << str;
@@ -837,7 +854,7 @@ void gentoken(command cmd, ostream &datastream)
 	}
 
 	else if ( cmd.name()=="SET" ) {
-		setvar(cmd.args[0],eval(cmd.args[1]));
+		setvars(cmd.args);
 	}
 
 	else if ( cmd.name()=="UNSET" ) {
@@ -946,13 +963,15 @@ void checktoken(command cmd)
 	}
 
 	else if ( cmd.name()=="REGEX" ) {
-		boost::regex regexstr(string(cmd.args[0]));
+		string str = eval(cmd.args[0]).getstr();
+		boost::regex regexstr(str);
 		boost::match_results<string::const_iterator> res;
 		string matchstr;
 
 		if ( !boost::regex_search((string::const_iterator)&data[datanr],
 		                          (string::const_iterator)data.end(),
-								  res,regexstr,boost::match_continuous) ) {
+		                          res,regexstr,
+		                          boost::match_continuous|boost::match_not_dot_newline) ) {
 			error();
 		} else {
 			size_t matchend = size_t(res[0].second-data.begin());
@@ -962,7 +981,7 @@ void checktoken(command cmd)
 				if ( data[datanr]=='\n' ) linenr++, charnr=0;
 			}
 		}
-		debug("'%s' = '%s'",matchstr.c_str(),cmd.args[0].c_str());
+		debug("'%s' = '%s'",matchstr.c_str(),str.c_str());
 
 		if ( cmd.nargs()>=2 ) setvar(cmd.args[1],value_t(matchstr));
 	}
@@ -972,7 +991,7 @@ void checktoken(command cmd)
 	}
 
 	else if ( cmd.name()=="SET" ) {
-		setvar(cmd.args[0],eval(cmd.args[1]));
+		setvars(cmd.args);
 	}
 
 	else if ( cmd.name()=="UNSET" ) {
@@ -990,6 +1009,8 @@ void checktoken(command cmd)
 // variable 'gendata').
 void checktestdata(ostream &datastream)
 {
+	datastream << setprecision(float_precision);
+
 	while ( true ) {
 		command cmd = currcmd = program[prognr];
 
@@ -1115,8 +1136,8 @@ void checktestdata(ostream &datastream)
 void init_checktestdata(std::istream &progstream, int opt_mask)
 {
 	// Output floats with high precision:
-	cout << setprecision(10);
-	cerr << setprecision(10);
+	cout << setprecision(float_precision);
+	cerr << setprecision(float_precision);
 	mpf_set_default_prec(256);
 
 	// Check the options bitmask
@@ -1143,7 +1164,7 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 	unsigned long seed;
 	gettimeofday(&time,NULL);
 	seed = (time.tv_sec * 1000) + (time.tv_usec % 1000);
-	srand(seed);
+	srandom(seed);
 	gmp_rnd.seed(seed);
 
 	// Initialize current position in program and data.
@@ -1152,11 +1173,18 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 	extra_ws = 0;
 }
 
-void gentestdata(ostream &datastream)
+bool gentestdata(ostream &datastream)
 {
 	// Generate random testdata
 	gendata = 1;
-	checktestdata(datastream);
+
+	try {
+		checktestdata(datastream);
+	} catch (generate_exception) {
+		return false;
+	}
+
+	return true;
 }
 
 bool checksyntax(istream &datastream)
@@ -1182,34 +1210,24 @@ bool checksyntax(istream &datastream)
 }
 
 // This doesn't support variables with indices (yet?).
-bool parse_preset_list(std::string list)
+bool parse_preset_list(std::string str)
 {
-	size_t pos = 0, sep1, sep2;
-	string name, val_str;
-	value_t value;
+	std::istringstream in(str);
+	Parser parselist(in, (int)Parser::PARSE_ASSIGNLIST);
 
-	debug("parsing preset list '%s'", list.c_str());
+	debug("parsing preset list '%s'", str.c_str());
 
-	while ( pos<list.length() ) {
-		if ( ( sep1=list.find('=', pos) )==string::npos ) return false;
-		if ( ( sep2=list.find(',', pos) )==string::npos ) sep2 = list.length();
-
-		name = list.substr(pos,sep1-pos);
-		val_str = list.substr(sep1+1,sep2-sep1-1);
-		debug("parsing preset '%s' = '%s'",name.c_str(),val_str.c_str());
-
-		try {
-			value = value_t(mpz_class(val_str));
-		} catch ( std::invalid_argument ) {
-			try {
-				value = value_t(mpf_class(val_str));
-			} catch ( ... ) { return false; }
-		} catch ( ... ) { return false; }
-
-		setvar(expr(name),value,1);
-
-		pos = sep2 + 1;
+	try {
+		if ( parselist.parse()!=0 ) {
+			cerr << "parse error reading preset list" << endl;
+			return false;
+		}
+	} catch ( exception& e ) {
+		cerr << "parse error: " << e.what() << endl;
+		return false;
 	}
+
+	setvars(parselist.parseResult.args,1);
 
 	return true;
 }

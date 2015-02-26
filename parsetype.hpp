@@ -14,10 +14,6 @@ typedef parse_t command;
 typedef parse_t expr;
 typedef parse_t test;
 
-namespace checktestdata {
-extern std::vector<command> program; // FIXME: in checktestdata namespace
-}
-
 std::ostream &operator<<(std::ostream &, const parse_t &);
 
 struct parse_t {
@@ -34,6 +30,7 @@ struct parse_t {
 	  |&!    logical AND,OR,NOT
 	  EMUA   EOF,MATCH,UNIQUE,INARRAY keywords used within test expressions
 
+	  a      variable assigment with two arguments: variable name, expression.
 	  l      list of expressions (e.g. for array indices or argument list)
 	  v      variable with array indices in second argument
 	  s      string constant
@@ -72,7 +69,7 @@ struct parse_t {
 		switch ( op ) {
 		case 'l': // list: create new or append one argument
 			if ( arg2.op=='~' ) {
-				args.push_back(arg1);
+				if ( arg1.op!='~' ) args.push_back(arg1);
 			} else {
 				args = arg1.args;
 				args.push_back(arg2);
@@ -83,6 +80,11 @@ struct parse_t {
 		case 'f':
 		case 's':
 			val = arg1.val;
+			break;
+
+		case 'a': // variable assignment
+			args.push_back(arg1);
+			args.push_back(arg2);
 			break;
 
 		case 'v': // variable, read index from arg2 if present

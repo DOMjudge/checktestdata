@@ -21,8 +21,8 @@ The following grammar sub-elements are defined:
     compare  := '<' | '>' | '<=' | '>=' | '==' | '!='
     logical  := '&&' | '||'
     expr     := <term> | <expr> [+-] <term>
-    term     := <term> [*%/] <factor> | <factor>
-    factor   := <value> | '-' <term> | '(' <expr> ')' | <factor> '^' <factor>
+    term     := <factor> | <term> [*%/] <factor>
+    factor   := <value> | '-' <factor> | '(' <expr> ')' | <factor> '^' <factor>
     test     := '!' <test> | <test> <logical> <test> | '(' <test> ')' |
                  <expr> <compare> <expr> | <testcommand>
 
@@ -50,10 +50,10 @@ Tests can be built from comparison operators, the usual logical operators
 boolean value. These are:
 
 <dl>
-<dt><tt>MATCH(&lt;string&gt; str)</tt></dt>
+<dt><tt>MATCH(&lt;value&gt; str)</tt></dt>
 
 <dd>Returns whether the next character matches any of the characters
-    in 'str'.</dd>
+    in 'str', which must have string type.</dd>
 
 <dt><tt>ISEOF</tt></dt>
 
@@ -103,18 +103,20 @@ The following commands are available:
 
 <dd>Match the string (variable) 'str'.</dd>
 
-<dt><tt>REGEX(&lt;string&gt; str [, &lt;variable&gt; name])</tt></dt>
+<dt><tt>REGEX(&lt;value&gt; str [, &lt;variable&gt; name])</tt></dt>
 
-<dd>Match the extended regular expression 'str'. Matching is performed
-    greedily. Optionally assign the matched string to variable 'name'.</dd>
+<dd>Match the extended regular expression 'str', which must be of
+    string type. Matching is performed greedily, while '.' (a dot)
+    does not match a newline. Optionally assign the matched string to
+    variable 'name'.</dd>
 
 <dt><tt>ASSERT(&lt;test&gt; condition)</tt></dt>
 
 <dd>Assert that 'condition' is true, fail otherwise.</dd>
 
-<dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value])</tt></dt>
+<dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value[, ...])</tt></dt>
 
-<dd>Assign 'value' to variable 'name'.</dd>
+<dd>Assign 'value' to variable 'name', etc...</dd>
 
 <dt><tt>UNSET(&lt;varname&gt; a [,&lt;varname&gt; b ...])</tt></dt>
 

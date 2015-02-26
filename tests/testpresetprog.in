@@ -1,0 +1,6 @@
+INT(n,n+1) NEWLINE
+FLOAT(pi,2*pi) NEWLINE
+REGEX(foo) NEWLINE
+ASSERT( n==10 && pi>=3.14 && pi<315e-02 )
+ASSERT(n == 10)
+ASSERT(foo=="bar")

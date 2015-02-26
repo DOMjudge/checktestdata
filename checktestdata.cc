@@ -64,7 +64,9 @@ void usage()
 "  -g, --generate       don't check but generate random testdata\n"
 "  -p, --preset=<name>=<value>[,...]\n"
 "                       preset variable(s) <name> when generating testdata;\n"
-"                         this overrules anything in the program.\n"
+"                         this overrules anything in the program; note that\n"
+"                         string constants have to be double-quoted, after\n"
+"                         shell expansion, e.g. by passing them as '\"text\"'\n"
 "  -d, --debug          enable extra debugging output\n"
 "  -q, --quiet          don't display testdata error messages: test exitcode\n"
 "      --help           display this help and exit\n"
@@ -146,7 +148,7 @@ int main(int argc, char **argv)
 	init_checktestdata(prog, options);
 
 	// Parse presets after initialization to have debugging available
-	if ( !parse_preset_list(presets) ) {
+	if ( !presets.empty() && !parse_preset_list(presets) ) {
 		printf("Error parsing preset variable list.\n");
 		exit(exit_failure);
 	}

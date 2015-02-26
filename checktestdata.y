@@ -17,6 +17,9 @@
 %token VARNAME INTEGER FLOAT STRING
 %token OPT_FIXED OPT_SCIENTIFIC
 
+// Fake tokens to allow parsing with non-default start symbol:
+%token PARSE_ASSIGNLIST
+
 %left LOGIC_AND LOGIC_OR
 %left '+' '-'
 %left '*' '/' '%'
@@ -24,13 +27,14 @@
 
 %%
 
+start:
+    commands                                         { parseResult = $1; }
+|   PARSE_ASSIGNLIST assignlist                      { parseResult = $2; }
+;
+
 commands:
-	// empty
-|
-	commands command
-{
-	checktestdata::program.push_back($2);
-}
+    /* empty */                                      { $$ = parse_t('l'); }
+|   commands command                                 { $$ = parse_t('l',$1,$2); }
 ;
 
 command:
@@ -45,11 +49,11 @@ command:
 |	CMD_FLOAT  '(' expr ',' expr ',' variable ')'    { $$ = parse_t($1,$3,$5,$7); }
 |	CMD_FLOAT  '(' expr ',' expr ',' variable ',' opt_float ')'
 	                                                 { $$ = parse_t($1,$3,$5,$7,$9); }
-|	CMD_STRING '(' string ')'                        { $$ = parse_t($1,$3); }
-|	CMD_REGEX  '(' string ')'                        { $$ = parse_t($1,$3); }
-|	CMD_REGEX  '(' string ',' variable ')'           { $$ = parse_t($1,$3,$5); }
+|	CMD_STRING '(' value ')'                         { $$ = parse_t($1,$3); }
+|	CMD_REGEX  '(' value ')'                         { $$ = parse_t($1,$3); }
+|	CMD_REGEX  '(' value ',' variable ')'            { $$ = parse_t($1,$3,$5); }
 |	CMD_ASSERT '(' test ')'                          { $$ = parse_t($1,$3); }
-|	CMD_SET    '(' variable '=' expr ')'             { $$ = parse_t($1,$3,$5); }
+|	CMD_SET    '(' assignlist ')'                    { $$ = parse_t('@',$1,$3); }
 |	CMD_UNSET  '(' varlist ')'                       { $$ = parse_t('@',$1,$3); }
 |	CMD_REP    '(' expr ')'                          { $$ = parse_t($1,$3); }
 |	CMD_REP    '(' expr ',' command ')'              { $$ = parse_t($1,$3,$5); }
@@ -90,6 +94,15 @@ varlist:
 |	varlist ',' VARNAME      { $$ = parse_t('l',$1,$3); }
 ;
 
+varassign:
+    variable '=' expr        { $$ = parse_t('a',$1,$3); }
+;
+
+assignlist:
+    varassign                { $$ = parse_t('l',$1); }
+|   assignlist ',' varassign { $$ = parse_t('l',$1,$3); }
+;
+
 compare: CMP_LT | CMP_GT | CMP_LE | CMP_GE | CMP_EQ | CMP_NE ;
 
 expr:
@@ -119,7 +132,7 @@ test:
 |	test LOGIC_OR  test                     { $$ = parse_t('|',$1,$3); }
 |	expr compare expr                       { $$ = parse_t('?',$2,$1,$3); }
 |	TEST_EOF                                { $$ = parse_t('E'); }
-|	TEST_MATCH '(' string ')'               { $$ = parse_t('M',$3); }
+|	TEST_MATCH '(' value ')'                { $$ = parse_t('M',$3); }
 |	TEST_UNIQUE '(' varlist ')'             { $$ = parse_t('U',$3); }
 |	TEST_INARRAY '(' expr ',' variable ')'  { $$ = parse_t('A',$3,$5); }
 ;

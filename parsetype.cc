@@ -39,6 +39,12 @@ std::ostream &operator<<(std::ostream &out, const parse_t &obj)
 		return out;
 	}
 
+	// Special case variable assignment
+	if ( op=='a' ) {
+		out << obj.args[0] << '=' << obj.args[1];
+		return out;
+	}
+
 	if ( obj.nargs()>0 ) {
 		out << '(' << obj.args[0];
 		for(size_t i=1; i<obj.nargs(); i++) out << op << obj.args[i];
