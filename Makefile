@@ -1,9 +1,6 @@
 -include config.mk
 
-CFLAGS   += -DVERSION="\"$(VERSION)\""
 CXXFLAGS += -DVERSION="\"$(VERSION)\""
-
-CXXFLAGS += -std=c++11
 
 COVERAGE_CXXFLAGS = $(CXXFLAGS) -fprofile-arcs -ftest-coverage
 

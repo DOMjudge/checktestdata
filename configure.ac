@@ -4,29 +4,31 @@ AC_INIT([checktestdata],m4_esyscmd([date '+%Y%m%d' | tr -d '\n']]),
 AC_PREREQ([2.64])
 AC_CONFIG_SRCDIR([checktestdata.cc])
 
-# Set default {C,CXX,LD}FLAGS. This might screw up portability, but
+# Set default {CXX,LD}FLAGS. This might screw up portability, but
 # adds important security. Only set these flags when none are supplied
 # by the user.
-for flag in CFLAGS CXXFLAGS LDFLAGS ; do
+for flag in CXXFLAGS LDFLAGS ; do
 	AC_MSG_CHECKING([whether configure should try to set $flag])
 	if test x`eval echo '${'$flag'+set}'` = xset ; then res=no ; else res=yes ; fi
 	eval enable_${flag}_setting=$res
 	AC_MSG_RESULT($res)
 done
 
-DEF_CXFLAGS="-g -O2"
+DEF_CXXFLAGS="-g -O2"
 DEF_LDFLAGS=""
 
-AX_APPEND_COMPILE_FLAGS(-Wall,               DEF_CXFLAGS)
-AX_APPEND_COMPILE_FLAGS(-fstack-protector,   DEF_CXFLAGS)
-AX_APPEND_COMPILE_FLAGS(-fPIE,               DEF_CXFLAGS)
-AX_APPEND_COMPILE_FLAGS(-D_FORTIFY_SOURCE=2, DEF_CXFLAGS)
+AC_LANG_PUSH([C++])
+AX_APPEND_COMPILE_FLAGS(-std=c++11,          DEF_CXXFLAGS)
+AX_APPEND_COMPILE_FLAGS(-Wall,               DEF_CXXFLAGS)
+AX_APPEND_COMPILE_FLAGS(-fstack-protector,   DEF_CXXFLAGS)
+AX_APPEND_COMPILE_FLAGS(-fPIE,               DEF_CXXFLAGS)
+AX_APPEND_COMPILE_FLAGS(-D_FORTIFY_SOURCE=2, DEF_CXXFLAGS)
 AX_APPEND_LINK_FLAGS([-fPIE -pie],   DEF_LDFLAGS)
 AX_APPEND_LINK_FLAGS([-Wl,-z,relro], DEF_LDFLAGS)
 AX_APPEND_LINK_FLAGS([-Wl,-z,now],   DEF_LDFLAGS)
+AC_LANG_POP([C++])
 
-test "x$enable_CFLAGS_setting"   = xyes && AC_SUBST(CFLAGS,   $DEF_CXFLAGS)
-test "x$enable_CXXFLAGS_setting" = xyes && AC_SUBST(CXXFLAGS, $DEF_CXFLAGS)
+test "x$enable_CXXFLAGS_setting" = xyes && AC_SUBST(CXXFLAGS, $DEF_CXXFLAGS)
 test "x$enable_LDFLAGS_setting"  = xyes && AC_SUBST(LDFLAGS,  $DEF_LDFLAGS)
 
 # Checks for programs.
@@ -35,17 +37,17 @@ AC_PROG_CC
 AC_PROG_CXXCPP
 AC_PROG_CPP
 
-# check for Boost library
-AX_BOOST_BASE([1.33.1],[],[
-	AC_MSG_ERROR([Boost not found])])
-AX_BOOST_REGEX
-
-# Check for gmpxx headers separately, as they are C++.
+# Check for C++ gmpxx headers.
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([gmpxx.h])
 AC_CHECK_LIB(gmpxx,abs,AC_SUBST(LIBGMPXX,'-lgmpxx -lgmp'),[
 	AC_MSG_ERROR([GMPlib not found])],[-lgmp])
 AC_LANG_POP([C++])
+
+# check for Boost library
+AC_MSG_CHECKING([for libboost regex support])
+AX_BOOST_BASE([1.33.1],[],[AC_MSG_ERROR([Boost not found])])
+AX_BOOST_REGEX
 
 AC_ARG_ENABLE(parsergeneration,AS_HELP_STRING([--disable-parsergeneration],
 	      [toggle parser generation out of grammar description (default: yes).
