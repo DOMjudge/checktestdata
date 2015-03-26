@@ -102,15 +102,15 @@ if test "x$want_boost" = "xyes"; then
 
     dnl allow for real multi-arch paths e.g. /usr/lib/x86_64-linux-gnu. Give
     dnl them priority over the other paths since, if libs are found there, they
-    dnl are almost assuredly the ones desired.
+    dnl are almost assuredly the ones desired. First add fallback architectures
+    dnl to make sure that the canonical architecture has preference.
     AC_REQUIRE([AC_CANONICAL_HOST])
-    libsubdirs="lib/${host_cpu}-${host_os} $libsubdirs"
-
     case ${host_cpu} in
-      i?86)
+      i?86|x86_64)
         libsubdirs="lib/i386-${host_os} $libsubdirs"
         ;;
     esac
+    libsubdirs="lib/${host_cpu}-${host_os} $libsubdirs"
 
     dnl first we check the system location for boost libraries
     dnl this location ist chosen if boost libraries are installed with the --layout=system option
