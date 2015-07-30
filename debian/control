@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Thijs Kinkhorst <thijs@debian.org>
 Build-Depends: debhelper (>= 9), libboost-regex-dev, libgmp3-dev
 Standards-Version: 3.9.6
-Homepage: http://www.domjudge.org/
+Homepage: https://www.domjudge.org/
 Vcs-Git: https://github.com/DOMjudge/checktestdata.git
 Vcs-Browser: https://github.com/DOMjudge/checktestdata
 
