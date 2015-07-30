@@ -86,9 +86,9 @@ licences; see the respective files under m4/ for details.
 ## Contact
 
 The developers can be reached through the mailinglist
-`domjudge-devel@lists.a-eskwadraat.nl`. You need to be subscribed before
+`domjudge-devel@domjudge.org`. You need to be subscribed before
 you can post. Information, subscription and archives are available at:
-https://lists.a-eskwadraat.nl/mailman/listinfo/domjudge-devel
+https://www.domjudge.org/mailman/listinfo/domjudge-devel
 
 Some developers and users of checktestdata linger on the IRC channel
 dedicated to DOMjudge on the Freenode network:
