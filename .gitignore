@@ -12,3 +12,6 @@ parserbase.h
 scannerbase.h
 checktestdata-scan.tar.xz
 cov-int/
+*.gcda
+*.gcno
+coverage*.html
