@@ -8,3 +8,6 @@ configure
 config.mk
 checktestdata-scan.tar.xz
 cov-int/
+*.gcda
+*.gcno
+coverage*.html

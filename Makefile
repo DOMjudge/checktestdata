@@ -106,6 +106,8 @@ dist: $(PARSER_GEN)
 
 clean:
 	-rm -f $(TARGETS) $(OBJECTS)
+# Remove Coverity scan data:
+	-rm -rf cov-int checktestdata-scan.tar.xz
 
 distclean: clean
 	-rm -f $(PARSER_GEN)

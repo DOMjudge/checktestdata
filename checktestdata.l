@@ -100,7 +100,7 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 }
 
 \\[ntrbf\"\\] {
-	/* Escape sequences for some special characters */
+	/* Escape sequences for some special characters. */
 	char c = matched().back(), res;
 	switch ( c ) {
 	case 'n':  res = '\n'; break;
@@ -119,12 +119,12 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 }
 
 \\\n {
-	/* ignore escaped newlines */
+	/* Ignore escaped newlines (line continuation). */
 	setMatched(matched().substr(0,matched().length()-2));
 	more();
 }
 
-	/* treat all other backslashes normally */
+	/* Treat all other backslashes normally. */
 \\.     more();
 
 [^\\\n\"]+ {
@@ -135,15 +135,15 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 } /* end of string parsing */
 
 [ \t\r\n]+ {
-	/* ignore whitespace and newlines */
+	/* Ignore whitespace and newlines. */
 }
 
 ^#.*\n {
-	/* ignore comment lines starting with '#' */
+	/* Ignore comment lines starting with '#' */
 }
 
 . {
-	/* return all others characters as-is. */
+	/* Return all others characters as-is. */
 	return matched()[0];
 }
 
