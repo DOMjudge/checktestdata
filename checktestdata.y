@@ -11,6 +11,7 @@
 
 %token TEST_EOF TEST_MATCH TEST_UNIQUE TEST_INARRAY
 %token CMP_LT CMP_GT CMP_LE CMP_GE CMP_EQ CMP_NE
+%token FUN_STRLEN
 %token CMD_SPACE CMD_NEWLINE CMD_EOF CMD_INT CMD_FLOAT CMD_STRING CMD_REGEX
 %token CMD_ASSERT CMD_SET CMD_UNSET
 %token CMD_REP CMD_WHILE CMD_REPI CMD_WHILEI CMD_IF CMD_ELSE CMD_END
@@ -69,14 +70,15 @@ command:
 opt_float: OPT_FIXED | OPT_SCIENTIFIC ;
 
 string:
-	STRING    { $$ = parse_t('s',$1); }
+	STRING    { $$ = parse_t('S',$1); }
 ;
 
 value:
-	INTEGER   { $$ = parse_t('i',$1); }
-|	FLOAT     { $$ = parse_t('f',$1); }
+	INTEGER   { $$ = parse_t('I',$1); }
+|	FLOAT     { $$ = parse_t('F',$1); }
 |	string
 |	variable
+|	function
 ;
 
 variable:
@@ -104,6 +106,10 @@ assignlist:
 ;
 
 compare: CMP_LT | CMP_GT | CMP_LE | CMP_GE | CMP_EQ | CMP_NE ;
+
+function:
+	FUN_STRLEN '(' value ')' { $$ = parse_t('f',$1,$3); }
+;
 
 expr:
 	term          { $$ = parse_t($1); }

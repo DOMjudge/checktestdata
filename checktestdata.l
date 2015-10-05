@@ -20,6 +20,8 @@ INARRAY  { return Parser::TEST_INARRAY; }
 ==       { return Parser::CMP_EQ; }
 !=       { return Parser::CMP_NE; }
 
+STRLEN   { return Parser::FUN_STRLEN; }
+
 SPACE    { return Parser::CMD_SPACE; }
 NEWLINE  { return Parser::CMD_NEWLINE; }
 EOF      { return Parser::CMD_EOF; }

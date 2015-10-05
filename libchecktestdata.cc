@@ -315,7 +315,7 @@ value_t value(expr x)
 {
 	debug("value '%s'",x.val.c_str());
 
-	if ( x.op=='s' ) return value_t(x.val);
+	if ( x.op=='S' ) return value_t(x.val);
 	if ( isalpha(x.val[0]) ) return getvar(x);
 
 	value_t res;
@@ -425,13 +425,26 @@ value_t pow(const value_t &x, const value_t &y)
 	return res;
 }
 
+value_t evalfun(args_t funargs)
+{
+	string fun = funargs[0].val;
+	if ( fun=="STRLEN" ) {
+		string str = eval(funargs[1]).getstr();
+		return value_t(mpz_class(str.length()));
+	}
+
+	cerr << "unknown function '" << fun << "' in "
+		 << program[prognr] << endl;
+	exit(exit_failure);
+}
+
 value_t eval(expr e)
 {
 	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
 	switch ( e.op ) {
-	case 'i':
-	case 'f':
-	case 's':
+	case 'I':
+	case 'F':
+	case 'S':
 	case 'v': return value(e);
 	case 'n': return -eval(e.args[0]);
 	case '+': return eval(e.args[0]) + eval(e.args[1]);
@@ -440,6 +453,7 @@ value_t eval(expr e)
 	case '/': return eval(e.args[0]) / eval(e.args[1]);
 	case '%': return eval(e.args[0]) % eval(e.args[1]);
 	case '^': return pow(eval(e.args[0]),eval(e.args[1]));
+	case 'f': return evalfun(e.args);
 	default:
 		cerr << "unknown arithmetic operator '" << e.op << "' in "
 		     << program[prognr] << endl;

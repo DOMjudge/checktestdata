@@ -30,10 +30,14 @@ struct parse_t {
 	  |&!    logical AND,OR,NOT
 	  EMUA   EOF,MATCH,UNIQUE,INARRAY keywords used within test expressions
 
+	  I      integer constant
+	  F      float constant
+	  S      string constant
+
 	  a      variable assigment with two arguments: variable name, expression.
+	  f      function returning a value
 	  l      list of expressions (e.g. for array indices or argument list)
 	  v      variable with array indices in second argument
-	  s      string constant
 	  @      command with list of arguments provided in second argument,
 	  ' '    command
 	  ~      uninitialized object, to detect unset default arguments
@@ -76,9 +80,9 @@ struct parse_t {
 			}
 			break;
 
-		case 'i': // integer, float, string literal values
-		case 'f':
-		case 's':
+		case 'I': // integer, float, string literal values
+		case 'F':
+		case 'S':
 			val = arg1.val;
 			break;
 

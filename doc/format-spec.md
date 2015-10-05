@@ -17,7 +17,7 @@ The following grammar sub-elements are defined:
     string   := ".*"
     varname  := [a-z][a-z0-9]*
     variable := <varname> | <varname> '[' <expr> [',' <expr> ...] ']'
-    value    := <integer> | <float> | <string> | <variable>
+    value    := <integer> | <float> | <string> | <variable> | <function>
     compare  := '<' | '>' | '<=' | '>=' | '==' | '!='
     logical  := '&&' | '||'
     expr     := <term> | <expr> [+-] <term>
@@ -72,6 +72,15 @@ boolean value. These are:
 <dt><tt>INARRAY(&lt;value&gt; val, &lt;varname&gt; var)</tt></dt>
 
 <dd>Checks if val occurs in the array variable var.</dd>
+</dl>
+
+The following functions are available:
+
+<dl>
+<dt><tt>STRLEN(&lt;variable&gt; str)</tt></dt>
+
+<dd>Returns the character length of 'str', which must be a variable of
+    string type.</dd>
 </dl>
 
 The following commands are available:
