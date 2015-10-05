@@ -77,10 +77,9 @@ boolean value. These are:
 The following functions are available:
 
 <dl>
-<dt><tt>STRLEN(&lt;variable&gt; str)</tt></dt>
+<dt><tt>STRLEN(&lt;value&gt; str)</tt></dt>
 
-<dd>Returns the character length of 'str', which must be a variable of
-    string type.</dd>
+<dd>Returns the character length of 'str', which must have string type.</dd>
 </dl>
 
 The following commands are available:
