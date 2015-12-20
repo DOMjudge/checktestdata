@@ -483,48 +483,54 @@ bool unique(args_t varlist)
 {
 	debug("unique, #args=%d",(int)varlist.size());
 
-	vector<string> vars;
+	vector<decltype(&variable[""])> vars;
 
 	// First check if all variables exist.
 	for(size_t i=0; i<varlist.size(); i++) {
-		vars.push_back(varlist[i].val);
-		if ( !variable.count(vars[i]) ) {
-			cerr << "variable " << vars[i] << " undefined in "
+		if ( !variable.count(varlist[i].val) ) {
+			cerr << "variable " << varlist[i].val << " undefined in "
 				 << program[prognr] << endl;
 			exit(exit_failure);
 		}
+		vars.push_back(&variable[varlist[i].val]);
 	}
 
 	// Check if all variables have equal numbers of indices. Then we
 	// can later check if they have the same indices by comparing the
 	// indices to that of the first variable.
 	for(size_t i=1; i<vars.size(); i++) {
-		if ( variable[vars[0]].size()!=variable[vars[i]].size() ) {
-			error("variables " + vars[0] + " and " + vars[i] +
+		if ( vars[0]->size()!=vars[i]->size() ) {
+			error("variables " + varlist[0].val + " and " + varlist[i].val +
 			      " have different indices");
 		}
 	}
-
 	// Now check if all tuples are unique.
-	set<vector<value_t> > tuples;
-	for(indexmap::iterator it=variable[vars[0]].begin();
-		it!=variable[vars[0]].end(); ++it) {
-		vector<mpz_class> index = it->first;
+	vector<pair<vector<value_t>,const indexmap::key_type*>> tuples;
+	for(indexmap::iterator it=vars[0]->begin();
+		it!=vars[0]->end(); ++it) {
+		const vector<mpz_class> &index = it->first;
 		vector<value_t> tuple;
 		for(size_t i=0; i<vars.size(); i++) {
-			if ( !variable[vars[i]].count(index) ) {
+			auto it = vars[i]->find(index);
+			if ( it == vars[i]->end() ) {
 				string s;
 				s = "index [";
 				for(size_t j=0; j<index.size(); j++) {
 					if ( j>0 ) s += ",";
 					s += index[j].get_str();
 				}
-				s += "] not defined for variable " + vars[i];
+				s += "] not defined for variable " + varlist[i].val;
 				error(s);
 			}
-			tuple.push_back(variable[vars[i]][index]);
+			tuple.push_back(it->second);
 		}
-		if ( tuples.count(tuple) ) {
+		tuples.emplace_back(tuple,&index);
+	}
+	sort(begin(tuples), end(tuples));
+	for(size_t i = 0; i + 1 < tuples.size(); ++i) {
+		if(tuples[i].first == tuples[i+1].first) {
+			auto tuple = tuples[i].first;
+			auto index = *tuples[i].second;
 			string s;
 			s = "non-unique tuple (" + tuple[0].tostr();
 			for(size_t j=1; j<tuple.size(); j++) s += "," + tuple[j].tostr();
@@ -536,7 +542,6 @@ bool unique(args_t varlist)
 			s += "]";
 			error(s);
 		}
-		tuples.insert(tuple);
 	}
 	return true;
 }
