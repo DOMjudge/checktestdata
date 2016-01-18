@@ -68,7 +68,7 @@ fi
 # Check option to link statically against "special" libraries for
 # submit client and checktestdata programs.
 AC_ARG_ENABLE(static-linking,AS_HELP_STRING([--enable-static-linking],
-[enable static linking against libgmpxx,libboost_regex (default: no).]))
+[enable static linking against libgmpxx (default: no).]))
 
 if test "x$enable_static_linking" = "xyes"; then
 	AC_SUBST(STATIC_LINK_START,[-Wl,-Bstatic])
