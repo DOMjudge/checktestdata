@@ -106,7 +106,7 @@ clean:
 # Remove Coverity scan data:
 	-rm -rf cov-int checktestdata-scan.tar.xz
 
-distclean: clean
+distclean: clean coverage-clean
 	-rm -f $(PARSER_GEN)
 
-.PHONY: coverage coverage-clean coverage-report
+.PHONY: build dist check clean distclean coverage coverage-clean coverage-report
