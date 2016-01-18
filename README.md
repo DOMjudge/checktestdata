@@ -71,7 +71,7 @@ anything.
 
 ## Copyright & Licencing
 
-Checktestdata is Copyright &copy; 2008 - 2015 by the checktestdata developers and
+Checktestdata is Copyright &copy; 2008 - 2016 by the checktestdata developers and
 all respective contributors. The current checktestdata developers are Jeroen
 Bransen, Jaap Eldering, Jan Kuipers, and Tobias Werth; see the git commits for
 a complete list of contributors.
