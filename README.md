@@ -1,4 +1,5 @@
-Checktestdata [![Build Status](https://travis-ci.org/DOMjudge/checktestdata.svg?branch=master)](https://travis-ci.org/DOMjudge/checktestdata)
+Checktestdata [![Build Status](https://img.shields.io/travis/DOMjudge/checktestdata.svg)](https://travis-ci.org/DOMjudge/checktestdata)
+[![Coverage Status](https://img.shields.io/coveralls/DOMjudge/checktestdata.svg)](https://coveralls.io/r/DOMjudge/checktestdata)
 =============
 
 Checktestdata is a tool to verify the syntactical integrity of test cases in
