@@ -1,0 +1,2 @@
+REGEX("[a-z]+",a) SPACE REGEX("[A-Z]+",b) NEWLINE
+ASSERT( STRLEN(a) + STRLEN(b) >= 3 )

@@ -6,7 +6,8 @@ std::ostream &operator<<(std::ostream &out, const parse_t &obj)
 
 	// '#' should never be output as operator
 	switch ( op ) {
-	case 'i':
+	case 'I':
+	case 'F':
 	case 'f':
 	case ' ': out << obj.val;   op = ','; break;
 	case 'n': out << '-';       op = '#'; break;
@@ -19,7 +20,7 @@ std::ostream &operator<<(std::ostream &out, const parse_t &obj)
 	}
 
 	// Special case quote strings
-	if ( op=='s' ) return out << '"' << obj.val << '"';
+	if ( op=='S' ) return out << '"' << obj.val << '"';
 
 	// Special case compare operators, as these are not stored in 'op'
 	if ( op=='?' ) {

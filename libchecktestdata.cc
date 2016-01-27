@@ -12,6 +12,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <cctype>
 #include <cstdlib>
 #include <cstdarg>
@@ -20,6 +21,7 @@
 #include <sys/time.h>
 #include <cstdlib>
 #include <boost/regex.hpp>
+#include <boost/variant.hpp>
 #include <gmpxx.h>
 
 #include "parser.h"
@@ -29,18 +31,18 @@ using namespace std;
 
 namespace checktestdata {
 
-enum value_type { value_none, value_int, value_flt, value_str };
+struct value_none {};
+ostream& operator<<(ostream& os, const value_none&) {
+	return os << "<no value>";
+}
 
 struct value_t {
-	value_type type;
-	mpz_class intval;
-	mpf_class fltval;
-	string    strval;
+	boost::variant<mpz_class, mpf_class, string, value_none> val;
 
-	value_t(): type(value_none) {}
-	explicit value_t(mpz_class x): type(value_int), intval(x) {}
-	explicit value_t(mpf_class x): type(value_flt), fltval(x) {}
-	explicit value_t(string    x): type(value_str), strval(x) {}
+	value_t(): val(value_none()) {}
+	explicit value_t(mpz_class x): val(x) {}
+	explicit value_t(mpf_class x): val(x) {}
+	explicit value_t(string x): val(x) {}
 
 	operator mpz_class() const;
 	operator mpf_class() const;
@@ -59,12 +61,7 @@ class generate_exception {};
 
 ostream& operator <<(ostream &os, const value_t &val)
 {
-	switch ( val.type ) {
-	case value_int: return os << val.intval;
-	case value_flt: return os << val.fltval;
-	case value_str: return os << '"' << val.strval << '"';
-	default:        return os << "<no value>";
-	}
+	return os << val.val;
 }
 
 string value_t::tostr() const
@@ -226,32 +223,19 @@ long string2int(string s)
 
 value_t::operator mpz_class() const
 {
-	if ( type!=value_int ) {
-		if ( type==value_flt  ) cerr << "float: " << fltval << endl;
-		if ( type==value_none ) cerr << "none" << endl;
-		cerr << "integer value expected in " << program[prognr] << endl;
-		exit(exit_failure);
-	}
-	return intval;
+	return boost::get<mpz_class>(val);
 }
 
 value_t::operator mpf_class() const
 {
-	if ( !(type==value_int || type==value_flt) ) {
-		cerr << "float (or integer) value expected in " << program[prognr] << endl;
-		exit(exit_failure);
-	}
-	if ( type==value_int ) return intval;
-	return fltval;
+	if(const mpz_class* p = boost::get<mpz_class>(&val))
+		return *p;
+	return boost::get<mpf_class>(val);
 }
 
 string value_t::getstr() const
 {
-	if ( type!=value_str ) {
-		cerr << "string value expected in " << program[prognr] << endl;
-		exit(exit_failure);
-	}
-	return strval;
+	return boost::get<string>(val);
 }
 
 value_t eval(expr); // forward declaration
@@ -315,123 +299,169 @@ value_t value(expr x)
 {
 	debug("value '%s'",x.val.c_str());
 
-	if ( x.op=='s' ) return value_t(x.val);
+	if ( x.op=='S' ) return value_t(x.val);
 	if ( isalpha(x.val[0]) ) return getvar(x);
 
-	value_t res;
-	if ( res.intval.set_str(x.val,0)==0 ) res.type = value_int;
-	else if ( res.fltval.set_str(x.val,0)==0 ) {
-		res.type = value_flt;
+	mpz_class intval;
+	mpf_class fltval;
+	if ( intval.set_str(x.val,0)==0 ) return value_t(intval);
+	else if ( fltval.set_str(x.val,0)==0 ) {
 		// Set sufficient precision:
-		if ( res.fltval.get_prec()<4*x.val.length() ) {
-			res.fltval.set_prec(4*x.val.length());
-			res.fltval.set_str(x.val,0);
+		if ( fltval.get_prec()<4*x.val.length() ) {
+			fltval.set_prec(4*x.val.length());
+			fltval.set_str(x.val,0);
 		}
+		return value_t(fltval);
 	}
-	return res;
+	return value_t();
 }
+
+
+template<class A, class B>
+struct arith_result {
+	typedef typename conditional<
+		is_same<A,mpz_class>::value && is_same<B,mpz_class>::value,
+			mpz_class,
+			mpf_class
+			>::type type;
+};
+
+template<class A, class B> struct arith_compatible {
+	constexpr static bool value = (is_same<mpz_class,A>::value || is_same<mpf_class,A>::value) &&
+		(is_same<mpz_class,B>::value || is_same<mpf_class,B>::value);
+};
+
+template<class A, class B> struct is_comparable {
+	constexpr static bool value = arith_compatible<A,B>::value ||
+		(is_same<A,string>::value && is_same<B,string>::value);
+};
 
 /* We define overloaded arithmetic and comparison operators.
  * As they are all identical, the code is captured in two macro's
  * below, except for the modulus and unary minus.
  */
-#define DECL_VALUE_BINOP(op) \
+#define DECL_VALUE_BINOP(op,name) \
+struct arithmetic_##name : public boost::static_visitor<value_t> {\
+	template<class A, class B, typename enable_if<!arith_compatible<A,B>::value,int>::type = 0>\
+	value_t operator()(const A& a, const B& b) const {\
+		cerr << "cannot compute " << a << " " #op " " << b << endl; \
+		exit(exit_failure);\
+	}\
+	template<class A, class B, typename enable_if<arith_compatible<A,B>::value,int>::type = 0,\
+		class C = typename arith_result<A,B>::type>\
+	value_t operator()(const A& a, const B& b)const  {\
+		return value_t(C(a op b));\
+	}\
+};\
 value_t operator op(const value_t &x, const value_t &y) \
 { \
-	if ( x.type==value_int  && y.type==value_int ) { \
-		return value_t(mpz_class(x.intval op y.intval)); \
-	} \
-	if ( (x.type==value_int || x.type==value_flt) && \
-	     (y.type==value_int || y.type==value_flt) ) { \
-		return value_t(mpf_class(mpf_class(x) op mpf_class(y))); \
-	} \
-	cerr << "cannot apply " << #op << " to non-arithmetic argument(s) in " \
-	     << program[prognr] << endl; \
-	exit(exit_failure); \
+	return boost::apply_visitor(arithmetic_##name(), x.val, y.val);\
 }
 
-#define DECL_VALUE_CMPOP(op) \
+#define DECL_VALUE_CMPOP(op,name) \
+struct arithmetic_##name : public boost::static_visitor<bool> {\
+	template<class A, class B, typename enable_if<!is_comparable<A,B>::value,int>::type = 0>\
+	bool operator()(const A& a, const B& b)const  {\
+		cerr << "cannot compute " << a << " " #op " " << b << endl; \
+		exit(exit_failure);\
+	}\
+	template<class A, class B, typename enable_if<is_comparable<A,B>::value,int>::type = 0>\
+	bool operator()(const A& a, const B& b)const  {\
+		return a op b;\
+	}\
+};\
 bool operator op(const value_t &x, const value_t &y) \
 { \
-	if ( x.type==value_str  && y.type==value_str ) return x.strval op y.strval; \
-	if ( x.type==value_int  && y.type==value_int ) return x.intval op y.intval; \
-	if ( (x.type==value_int || x.type==value_flt) && \
-	     (y.type==value_int || y.type==value_flt) ) \
-		return mpf_class(x) op mpf_class(y); \
-	cerr << "incompatible value types in comparison in " \
-	     << program[prognr] << endl; \
-	exit(exit_failure); \
+	return boost::apply_visitor(arithmetic_##name(), x.val, y.val);\
 }
 
-DECL_VALUE_BINOP(+)
-DECL_VALUE_BINOP(-)
-DECL_VALUE_BINOP(*)
-DECL_VALUE_BINOP(/)
+DECL_VALUE_BINOP(+,plus)
+DECL_VALUE_BINOP(-,minus)
+DECL_VALUE_BINOP(*,times)
+DECL_VALUE_BINOP(/,div)
 
-DECL_VALUE_CMPOP(>)
-DECL_VALUE_CMPOP(<)
-DECL_VALUE_CMPOP(>=)
-DECL_VALUE_CMPOP(<=)
-DECL_VALUE_CMPOP(==)
-DECL_VALUE_CMPOP(!=)
+DECL_VALUE_CMPOP(>,g)
+DECL_VALUE_CMPOP(<,l)
+DECL_VALUE_CMPOP(>=,ge)
+DECL_VALUE_CMPOP(<=,le)
+DECL_VALUE_CMPOP(==,e)
+DECL_VALUE_CMPOP(!=,ne)
 
 value_t operator -(const value_t &x)
 {
-	if ( x.type==value_int ) return value_t(mpz_class(-x.intval));
-	if ( x.type==value_flt ) return value_t(mpf_class(-x.fltval));
-	cerr << "cannot negate non-arithmetic argument"
-		 << program[prognr] << endl;
-	exit(exit_failure);
+	return value_t(mpz_class(0)) - x;
 }
 
 value_t operator %(const value_t &x, const value_t &y)
 {
-	value_t res;
-	if ( x.type==value_int  && y.type==value_int ) {
-		res = x;
-		res.intval %= y.intval;
-		return res;
+	const mpz_class *xp, *yp;
+	if ( (xp = boost::get<const mpz_class>(&x.val)) && (yp = boost::get<const mpz_class>(&y.val))) {
+		auto res = *xp;
+		res %= *yp;
+		return value_t(res);
 	}
 	cerr << "can only use modulo on integers in " << program[prognr] << endl;
 	exit(exit_failure);
 }
 
-value_t pow(const value_t &x, const value_t &y)
-{
-	if ( !(x.type==value_int || x.type==value_flt) ) {
+struct pow_visitor : public boost::static_visitor<value_t> {
+	template<class B, class E>
+	value_t operator()(const B& b, const E& e) const {
+		cerr << "only integer exponents allowed in " << program[prognr] << endl;
+		exit(exit_failure);
+	}
+	template<class B>
+	value_t operator()(const B& b, const mpz_class& e) const {
+		if(!e.fits_ulong_p()) {
+			cerr << "integer exponent " << e
+				<< " does not fit in unsigned long in " << program[prognr] << endl;
+			exit(exit_failure);
+		}
+		return pow(b, e);
+	}
+	value_t pow(const mpz_class& b, const mpz_class& e) const {
+		mpz_class res;
+		mpz_pow_ui(res.get_mpz_t(), b.get_mpz_t(), e.get_ui());
+		return value_t(res);
+	}
+	value_t pow(const mpf_class& b, const mpz_class& e) const {
+		mpf_class res;
+		mpf_pow_ui(res.get_mpf_t(), b.get_mpf_t(), e.get_ui());
+		return value_t(res);
+	}
+	template<class B>
+	value_t pow(const B&, const mpz_class&) const {
 		cerr << "exponentiation base must be of arithmetic type in "
 			 << program[prognr] << endl;
 		exit(exit_failure);
 	}
-	if ( y.type!=value_int ) {
-		cerr << "only integer exponents allowed in " << program[prognr] << endl;
-		exit(exit_failure);
+};
+
+value_t pow(const value_t &x, const value_t &y)
+{
+	return boost::apply_visitor(pow_visitor(), x.val, y.val);
+}
+
+value_t evalfun(args_t funargs)
+{
+	string fun = funargs[0].val;
+	if ( fun=="STRLEN" ) {
+		string str = eval(funargs[1]).getstr();
+		return value_t(mpz_class(str.length()));
 	}
-	if ( !y.intval.fits_ulong_p() ) {
-		cerr << "integer exponent " << y.intval
-			 << " does not fit in unsigned long in " << program[prognr] << endl;
-		exit(exit_failure);
-	}
-	unsigned long y1 = y.intval.get_ui();
-	value_t res;
-	if ( x.type==value_int ) {
-		res = x;
-		mpz_pow_ui(res.intval.get_mpz_t(),x.intval.get_mpz_t(),y1);
-		return res;
-	}
-	mpf_class x1 = x;
-	res = value_t(x1);
-	mpf_pow_ui(res.fltval.get_mpf_t(),x1.get_mpf_t(),y1);
-	return res;
+
+	cerr << "unknown function '" << fun << "' in "
+		 << program[prognr] << endl;
+	exit(exit_failure);
 }
 
 value_t eval(expr e)
 {
 	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
 	switch ( e.op ) {
-	case 'i':
-	case 'f':
-	case 's':
+	case 'I':
+	case 'F':
+	case 'S':
 	case 'v': return value(e);
 	case 'n': return -eval(e.args[0]);
 	case '+': return eval(e.args[0]) + eval(e.args[1]);
@@ -440,6 +470,7 @@ value_t eval(expr e)
 	case '/': return eval(e.args[0]) / eval(e.args[1]);
 	case '%': return eval(e.args[0]) % eval(e.args[1]);
 	case '^': return pow(eval(e.args[0]),eval(e.args[1]));
+	case 'f': return evalfun(e.args);
 	default:
 		cerr << "unknown arithmetic operator '" << e.op << "' in "
 		     << program[prognr] << endl;
@@ -469,48 +500,54 @@ bool unique(args_t varlist)
 {
 	debug("unique, #args=%d",(int)varlist.size());
 
-	vector<string> vars;
+	vector<decltype(&variable[""])> vars;
 
 	// First check if all variables exist.
 	for(size_t i=0; i<varlist.size(); i++) {
-		vars.push_back(varlist[i].val);
-		if ( !variable.count(vars[i]) ) {
-			cerr << "variable " << vars[i] << " undefined in "
+		if ( !variable.count(varlist[i].val) ) {
+			cerr << "variable " << varlist[i].val << " undefined in "
 				 << program[prognr] << endl;
 			exit(exit_failure);
 		}
+		vars.push_back(&variable[varlist[i].val]);
 	}
 
 	// Check if all variables have equal numbers of indices. Then we
 	// can later check if they have the same indices by comparing the
 	// indices to that of the first variable.
 	for(size_t i=1; i<vars.size(); i++) {
-		if ( variable[vars[0]].size()!=variable[vars[i]].size() ) {
-			error("variables " + vars[0] + " and " + vars[i] +
+		if ( vars[0]->size()!=vars[i]->size() ) {
+			error("variables " + varlist[0].val + " and " + varlist[i].val +
 			      " have different indices");
 		}
 	}
-
 	// Now check if all tuples are unique.
-	set<vector<value_t> > tuples;
-	for(indexmap::iterator it=variable[vars[0]].begin();
-		it!=variable[vars[0]].end(); ++it) {
-		vector<mpz_class> index = it->first;
+	vector<pair<vector<value_t>,const indexmap::key_type*>> tuples;
+	for(indexmap::iterator it=vars[0]->begin();
+		it!=vars[0]->end(); ++it) {
+		const vector<mpz_class> &index = it->first;
 		vector<value_t> tuple;
 		for(size_t i=0; i<vars.size(); i++) {
-			if ( !variable[vars[i]].count(index) ) {
+			auto it = vars[i]->find(index);
+			if ( it == vars[i]->end() ) {
 				string s;
 				s = "index [";
 				for(size_t j=0; j<index.size(); j++) {
 					if ( j>0 ) s += ",";
 					s += index[j].get_str();
 				}
-				s += "] not defined for variable " + vars[i];
+				s += "] not defined for variable " + varlist[i].val;
 				error(s);
 			}
-			tuple.push_back(variable[vars[i]][index]);
+			tuple.push_back(it->second);
 		}
-		if ( tuples.count(tuple) ) {
+		tuples.emplace_back(tuple,&index);
+	}
+	sort(begin(tuples), end(tuples));
+	for(size_t i = 0; i + 1 < tuples.size(); ++i) {
+		if(tuples[i].first == tuples[i+1].first) {
+			auto tuple = tuples[i].first;
+			auto index = *tuples[i].second;
 			string s;
 			s = "non-unique tuple (" + tuple[0].tostr();
 			for(size_t j=1; j<tuple.size(); j++) s += "," + tuple[j].tostr();
@@ -522,7 +559,6 @@ bool unique(args_t varlist)
 			s += "]";
 			error(s);
 		}
-		tuples.insert(tuple);
 	}
 	return true;
 }
@@ -788,7 +824,7 @@ void gentoken(command cmd, ostream &datastream)
 			// Check if we have a preset value, then override the
 			// random generated value
 			value_t y = getvar(cmd.args[2],1);
-			if ( y.type!=value_none ) {
+			if ( !boost::get<value_none>(&y.val) ) {
 				x = y;
 				if ( x<lo || x>hi ) {
 					error("preset value for '" + string(cmd.args[2]) + "' out of range");
@@ -821,7 +857,7 @@ void gentoken(command cmd, ostream &datastream)
 			// Check if we have a preset value, then override the
 			// random generated value
 			value_t y = getvar(cmd.args[2],1);
-			if ( y.type!=value_none ) {
+			if ( !boost::get<value_none>(&y.val) ) {
 				x = y;
 				if ( x<lo || x>hi ) {
 					error("preset value for '" + string(cmd.args[2]) + "' out of range");
