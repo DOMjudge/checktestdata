@@ -50,7 +50,7 @@ AX_BOOST_BASE([1.33.1],[],[AC_MSG_ERROR([Boost not found])])
 AX_BOOST_REGEX
 
 AC_ARG_ENABLE(parsergeneration,AS_HELP_STRING([--disable-parsergeneration],
-	      [toggle parser generation out of grammar description (default: yes).
+	      [toggle parser generation from grammar description (default: yes).
 	       This requires bisonc++ and flexc++.]))
 
 if test "x$enable_parsergeneration" != "xno"; then
