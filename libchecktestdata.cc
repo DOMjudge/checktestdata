@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
+#include <boost/exception_ptr.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include <gmpxx.h>
 
 #include "parser.h"
@@ -1263,7 +1265,12 @@ bool parse_preset_list(std::string str)
 		return false;
 	}
 
-	setvars(parselist.parseResult.args,1);
+	try {
+		setvars(parselist.parseResult.args,1);
+	} catch ( boost::exception& e ) {
+		cerr << "error in boost variant: " << boost::diagnostic_information(e) << endl;
+		return false;
+	}
 
 	return true;
 }
