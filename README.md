@@ -32,7 +32,7 @@ branch where we've pre-generated the scanner/parser files.
 Command line for installing the build dependencies on Debian or
 Ubuntu, when using the release branch:
 ```
-apt-get install make g++ libboost-regex-dev libgmp3-dev
+apt-get install make g++ libboost-regex-dev libgmp-dev
 ```
 For Redhat-like distributions try:
 ```
