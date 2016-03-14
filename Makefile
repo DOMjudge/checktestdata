@@ -95,7 +95,7 @@ coverage:
 coverage-clean:
 	rm -f *.gcda *.gcno *.gcov coverage*.html
 
-# Requires gcovr
+# Requires gcovr >= 3.2
 coverage-report: coverage
 	gcovr -g -r . --html --html-details -o coverage.html
 
