@@ -2,7 +2,7 @@ dist: trusty
 sudo: required
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y make g++ libboost-regex-dev libgmp3-dev flexc++ bisonc++
+  - sudo apt-get install -y make g++ libboost-regex-dev libgmp-dev flexc++ bisonc++
   - pip install --user cpp-coveralls
 script: ./bootstrap && make coverage
 after_success:

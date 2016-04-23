@@ -1,0 +1,2 @@
+# Non-integer modulo not allowed
+INT(1.1%1.1,2) NEWLINE

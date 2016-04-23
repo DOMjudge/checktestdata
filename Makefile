@@ -1,6 +1,6 @@
 -include config.mk
 
-CXXFLAGS += -DVERSION="\"$(VERSION)\""
+CXXFLAGS += -std=c++11 -DVERSION="\"$(VERSION)\""
 
 COVERAGE_CXXFLAGS = $(CXXFLAGS) -fprofile-arcs -ftest-coverage
 
@@ -76,6 +76,9 @@ check: checktestdata
 	prog=tests/testpresetprog.in  ; $(checksucc) ; \
 	prog=tests/testpresetprog.err ; $(checkfail) ; \
 	true
+	@opts='-g -p n=10,pi=0.31415E1,foo="\"bar' ; \
+	prog=tests/testpresetprog.in  ; $(checkfail) ; \
+	true
 # Test if generating testdata works and complies with the script:
 	@TMP=`mktemp --tmpdir dj_gendata.XXXXXX` || exit 1 ; data=$$TMP ; \
 	for i in tests/testprog*.in ; do \
@@ -95,7 +98,7 @@ coverage:
 coverage-clean:
 	rm -f *.gcda *.gcno *.gcov coverage*.html
 
-# Requires gcovr
+# Requires gcovr >= 3.2
 coverage-report: coverage
 	gcovr -g -r . --html --html-details -o coverage.html
 
