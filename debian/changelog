@@ -1,3 +1,9 @@
+checktestdata (20160423) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jaap Eldering <jaap@@jaapeldering.nl>  Sat, 23 Apr 2016 19:56:56 -0300
+
 checktestdata (20150218) unstable; urgency=low
 
   * Initial release.
