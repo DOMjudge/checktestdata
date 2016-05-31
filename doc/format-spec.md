@@ -8,7 +8,8 @@ neighboring rights, as specified in the
 
 Grammar and command syntax below. A valid checktestdata program consists of a
 list of commands. All commands are uppercase, while variables are lowercase
-with non-leading digits. Lines starting with `#` are comments and ignored.
+with non-leading digits. Comments start with `#` (not necessarily at the
+beginning of a line) and run until end of line.
 
 The following grammar sub-elements are defined:
 
