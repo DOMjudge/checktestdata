@@ -1,0 +1,10 @@
+# Testing comments:
+  # Should also work later on a line, # ## still a comment.
+INT(1,1) # Here we read an int=1 ;-)
+NEWLINE
+ # NEWLINE
+STRING(# bla bla
+ # bla bla # foo
+"hello" # world! )
+)
+NEWLINE # End of program

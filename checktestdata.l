@@ -140,8 +140,8 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 	/* Ignore whitespace and newlines. */
 }
 
-^#.*\n {
-	/* Ignore comment lines starting with '#' */
+#.* {
+	/* Ignore comments, starting with '#' until end of line (or file). */
 }
 
 . {
