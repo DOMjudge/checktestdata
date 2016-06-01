@@ -48,7 +48,7 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 }
 
  /* A floating point number must have a decimal point or exponent: */
-[0-9]+\.[0-9]+([eE][+-]?[0-9]+)? {
+[0-9]+\.[0-9]*([eE][+-]?[0-9]+)? {
 	return Parser::FLOAT;
 }
 

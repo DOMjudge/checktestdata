@@ -14,7 +14,7 @@ beginning of a line) and run until end of line.
 The following grammar sub-elements are defined:
 
     integer  := 0|-?[1-9][0-9]*
-    float    := -?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?
+    float    := -?[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?
     string   := ".*"
     varname  := [a-z][a-z0-9]*
     variable := <varname> | <varname> '[' <expr> [',' <expr> ...] ']'
