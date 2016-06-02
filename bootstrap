@@ -1,6 +1,10 @@
 #!/bin/sh
-set -x
 set -e
+if [ "x$1" = x-q ]; then
+	QUIET='-q'
+else
+	set -x
+fi
 aclocal -I m4
 autoconf
-./configure --disable-parsergeneration
+./configure $QUIET --disable-parsergeneration
