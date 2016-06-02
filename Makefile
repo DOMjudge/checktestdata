@@ -10,6 +10,12 @@ OBJECTS = $(CHKOBJS)
 
 PARSER_GEN = lex.cc scannerbase.h parse.cc parserbase.h
 
+# Check for QUIET environment variable:
+ifneq ($(QUIET),)
+QUIET=1
+MAKEFLAGS += --no-print-directory --quiet
+endif
+
 # Function to parse version number from bisonc++/flexc++ --version and
 # add it as a define in generated code. This is used in the header
 # files to conditionally include declarations that conflict between
