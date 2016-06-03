@@ -12,6 +12,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <regex>
 #include <type_traits>
 #include <cctype>
 #include <cstdlib>
@@ -20,7 +21,6 @@
 #include <getopt.h>
 #include <sys/time.h>
 #include <cstdlib>
-#include <boost/regex.hpp>
 #include <boost/variant.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -706,6 +706,7 @@ string genregex(string exp)
 {
 	unsigned int i = 0;
 	string res;
+	debug("genregex '%s'",exp.c_str());
 	while (i < exp.length()) {
 		switch (exp[i]) {
 		case '\\':
@@ -880,9 +881,9 @@ void gentoken(command cmd, ostream &datastream)
 	}
 
 	else if ( cmd.name()=="REGEX" ) {
-		string regex = eval(cmd.args[0]).getstr();
-//		boost::regex e1(regex, boost::regex::extended); // this is only to check the expression
-		string str = genregex(regex);
+		string regexstr = eval(cmd.args[0]).getstr();
+//		regex e1(regex, regex::extended); // this is only to check the expression
+		string str = genregex(regexstr);
 		datastream << str;
 		if ( cmd.nargs()>=2 ) setvar(cmd.args[1],value_t(str));
 	}
@@ -955,8 +956,9 @@ void checktoken(command cmd)
 		string float_regex("-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
 		string fixed_regex("-?[0-9]+(\\.[0-9]+)?");
 		string scien_regex("-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+");
-		boost::regex regexstr(float_regex);
-		boost::match_results<string::const_iterator> res;
+
+		regex regexstr(float_regex);
+		match_results<string::const_iterator> res;
 		string matchstr;
 
 		if ( cmd.nargs()>=4 ) {
@@ -968,9 +970,9 @@ void checktoken(command cmd)
 			}
 		}
 
-		if ( !boost::regex_search((string::const_iterator)&data[datanr],
-		                          (string::const_iterator)data.end(),
-		                          res,regexstr,boost::match_continuous) ) {
+		if ( !regex_search((string::const_iterator)&data[datanr],
+		                   (string::const_iterator)data.end(),
+		                   res,regexstr,regex_constants::match_continuous) ) {
 			error();
 		}
 		size_t matchend = size_t(res[0].second-data.begin());
@@ -1002,14 +1004,13 @@ void checktoken(command cmd)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string str = eval(cmd.args[0]).getstr();
-		boost::regex regexstr(str);
-		boost::match_results<string::const_iterator> res;
+		regex regexstr(str);
+		match_results<string::const_iterator> res;
 		string matchstr;
 
-		if ( !boost::regex_search((string::const_iterator)&data[datanr],
-		                          (string::const_iterator)data.end(),
-		                          res,regexstr,
-		                          boost::match_continuous|boost::match_not_dot_newline) ) {
+		if ( !regex_search((string::const_iterator)&data[datanr],
+		                   (string::const_iterator)data.end(),
+		                   res,regexstr,regex_constants::match_continuous) ) {
 			error();
 		} else {
 			size_t matchend = size_t(res[0].second-data.begin());

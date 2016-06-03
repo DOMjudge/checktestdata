@@ -21,8 +21,9 @@ according to which the testdata is checked.  Two sample scripts
 
 Requirements:
 
- * recent g++ (>= 4.7)
- * Libboost and the boost::regex extension
+ * A C++ compiler that supports C++11 including regex support.
+   (GNU g++ >= 4.9 and LLVM clang++ >= 3.5 are known to work)
+ * Libboost (http://www.boost.org/)
  * The GNU GMP libraries (http://gmplib.org/)
  * flexc++/bisonc++ (optional)
 
@@ -32,7 +33,7 @@ branch where we've pre-generated the scanner/parser files.
 Command line for installing the build dependencies on Debian or
 Ubuntu, when using the release branch:
 ```
-apt-get install make g++ libboost-regex-dev libgmp-dev
+apt-get install make g++ libboost-dev libgmp-dev
 ```
 For Redhat-like distributions try:
 ```
