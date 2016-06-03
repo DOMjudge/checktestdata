@@ -53,7 +53,7 @@ libchecktestdata.o: $(PARSER_GEN)
 libchecktestdata.o: %.o: %.cc %.hpp parser.h
 
 checktestdata: CPPFLAGS += $(BOOST_CPPFLAGS)
-checktestdata: LDFLAGS  += $(BOOST_LDFLAGS) $(STATIC_LINK_START) $(LIBGMPXX) $(BOOST_REGEX_LIB) $(STATIC_LINK_END)
+checktestdata: LDFLAGS  += $(BOOST_LDFLAGS) $(STATIC_LINK_START) $(LIBGMPXX) $(STATIC_LINK_END)
 checktestdata: LDFLAGS := $(filter-out -pie,$(LDFLAGS))
 checktestdata: checktestdata.cc $(CHKOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)

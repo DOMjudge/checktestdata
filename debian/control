@@ -2,7 +2,7 @@ Source: checktestdata
 Section: misc
 Priority: extra
 Maintainer: Thijs Kinkhorst <thijs@debian.org>
-Build-Depends: debhelper (>= 9), libboost-regex-dev, libgmp-dev
+Build-Depends: debhelper (>= 9), libboost-dev, libgmp-dev
 Standards-Version: 3.9.6
 Homepage: https://www.domjudge.org/
 Vcs-Git: https://github.com/DOMjudge/checktestdata.git
