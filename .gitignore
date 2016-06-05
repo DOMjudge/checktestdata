@@ -11,6 +11,8 @@ parse.cc
 parserbase.h
 scannerbase.h
 checktestdata-scan.tar.xz
+coverity-scan.tar.xz
+cov-submit-data*.sh
 cov-int/
 *.gcda
 *.gcno
