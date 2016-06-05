@@ -1,4 +1,8 @@
--include config.mk
+# Include variables set by configure, only if file exists so that
+# independent make targets still work:
+ifneq ($(wildcard config.mk),)
+include config.mk
+endif
 
 CXXFLAGS += -std=c++11 -DVERSION="\"$(VERSION)\""
 
@@ -108,14 +112,26 @@ coverage-clean:
 coverage-report: coverage
 	gcovr -g -r . --html --html-details -o coverage.html
 
+# Rules to configure and build for a Coverity scan. This assumes we're
+# running from the Git repository.
+coverity-conf:
+	git checkout $(subst 1,-q,$(QUIET)) release
+	./bootstrap $(subst 1,-q,$(QUIET))
+
+coverity-build: config.mk dist
+	$(MAKE) build
+	@VERSION=`grep '^VERSION =' config.mk | sed 's/^VERSION = *//'` \
+	echo "VERSION=$$VERSION" > cov-submit-data-version.sh
+
 dist: $(PARSER_GEN)
 
 clean:
 	-rm -f $(TARGETS) $(OBJECTS)
 # Remove Coverity scan data:
-	-rm -rf cov-int checktestdata-scan.tar.xz
+	-rm -rf cov-int coverity-scan.tar.xz cov-submit-data-version.sh
 
 distclean: clean coverage-clean
 	-rm -f $(PARSER_GEN)
 
-.PHONY: build dist check clean distclean coverage coverage-clean coverage-report
+.PHONY: build dist check clean distclean coverage coverage-clean coverage-report \
+        coverity-conf coverity-build
