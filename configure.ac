@@ -46,7 +46,6 @@ AC_LANG_POP([C++])
 # check for Boost library
 AC_MSG_CHECKING([for libboost regex support])
 AX_BOOST_BASE([1.33.1],[],[AC_MSG_ERROR([Boost not found])])
-AX_BOOST_REGEX
 
 AC_ARG_ENABLE(parsergeneration,AS_HELP_STRING([--disable-parsergeneration],
 	      [toggle parser generation from grammar description (default: yes).
