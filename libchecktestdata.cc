@@ -181,7 +181,7 @@ void readtestdata(istream &in)
 		exit(exit_failure);
 	}
 
- 	data = ss.str();
+	data = ss.str();
 }
 
 void error(string msg = string())
