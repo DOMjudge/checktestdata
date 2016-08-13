@@ -88,7 +88,9 @@ vector<command> program;
 // vector of the indices. Plain variables are stored using an index
 // vector of zero length.
 typedef map<vector<mpz_class>,value_t> indexmap;
+typedef map<value_t,set<vector<mpz_class>>> valuemap;
 map<string,indexmap> variable, preset;
+map<string,valuemap> rev_variable, rev_preset;
 
 // List of loop starting commands like REP, initialized in checksyntax.
 set<string> loop_cmds;
@@ -276,11 +278,20 @@ void setvar(expr var, value_t val, int use_preset = 0)
 		ind.push_back(mpz_class(eval(var.args[i])));
 	}
 
+	map<string,indexmap> *varlist = &variable;
+	map<string,valuemap> *revlist = &rev_variable;
 	if ( use_preset ) {
-		preset[var][ind] = val;
-	} else {
-		variable[var][ind] = val;
+		varlist = &preset;
+		revlist = &rev_preset;
 	}
+
+	// Remove previously existing value -> index:
+	if ( (*varlist)[var].count(ind) ) {
+		(*revlist)[var][val].erase(ind);
+		if ( (*revlist)[var][val].size()==0 ) (*revlist)[var].erase(val);
+	}
+	(*varlist)[var][ind] = val;
+	(*revlist)[var][val].insert(ind);
 }
 
 void setvars(vector<parse_t> varlist, int use_preset = 0)
@@ -294,6 +305,7 @@ void unsetvars(args_t varlist)
 {
 	for(size_t i=0; i<varlist.size(); i++) {
 		variable.erase(varlist[i].val);
+		rev_variable.erase(varlist[i].val);
 	}
 }
 
@@ -578,10 +590,7 @@ bool inarray(expr e, expr array)
 		exit(exit_failure);
 	}
 
-	for(indexmap::iterator it=variable[var].begin(); it!=variable[var].end(); ++it) {
-		if ( it->second==val ) return true;
-	}
-	return false;
+	return rev_variable[var].count(val) && rev_variable[var][val].size()>0;
 }
 
 bool dotest(test t)
