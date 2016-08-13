@@ -957,26 +957,52 @@ void checktoken(command cmd)
 		string fixed_regex("-?[0-9]+(\\.[0-9]+)?");
 		string scien_regex("-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+");
 
-		regex regexstr(float_regex);
-		match_results<string::const_iterator> res;
-		string matchstr;
-
+		int opt = 0; // 1 = scientific, 2 = fixed.
 		if ( cmd.nargs()>=4 ) {
-			if ( cmd.args[3].name()=="SCIENTIFIC" ) regexstr = scien_regex;
-			else if ( cmd.args[3].name()=="FIXED" ) regexstr = fixed_regex;
+			if ( cmd.args[3].name()=="SCIENTIFIC" ) opt = 1;
+			else if ( cmd.args[3].name()=="FIXED" ) opt = 2;
 			else {
 				cerr << "invalid option in " << program[prognr] << endl;
 				exit(exit_failure);
 			}
 		}
 
-		if ( !regex_search((string::const_iterator)&data[datanr],
-		                   (string::const_iterator)data.end(),
-		                   res,regexstr,regex_constants::match_continuous) ) {
-			error();
+		size_t start = datanr;
+		// Match optional minus sign:
+		if ( datanr<data.size() && data[datanr]=='-' ) { datanr++; charnr++; }
+		// Match base with optional decimal dot:
+		if ( datanr>=data.size() || !isdigit(data[datanr]) ) error("digit expected");
+		bool dot_seen = false, first_digit = true;
+		while ( datanr<data.size() &&
+		        (isdigit(data[datanr]) ||
+		         (!dot_seen && !first_digit && data[datanr]=='.')) ) {
+			first_digit = false;
+			if ( data[datanr]=='.' ) dot_seen = true;
+			datanr++;
+			charnr++;
 		}
-		size_t matchend = size_t(res[0].second-data.begin());
-		matchstr = string(data.begin()+datanr,data.begin()+matchend);
+		// Check that any dot is followed by digit:
+		if ( !isdigit(data[datanr-1]) ) error("digit expected");
+
+		// Match exponent:
+		if ( opt==1 || (opt==0 && datanr<data.size() && toupper(data[datanr])=='E') ) {
+			if ( datanr>=data.size() || toupper(data[datanr])!='E' ) {
+				error("exponent 'E' expected");
+			}
+			datanr++;
+			charnr++;
+			if ( datanr<data.size() && (data[datanr]=='-' || data[datanr]=='+') ) {
+				datanr++;
+				charnr++;
+			}
+			while ( datanr<data.size() && isdigit(data[datanr]) ) {
+				datanr++;
+				charnr++;
+			}
+			if ( !isdigit(data[datanr-1]) ) error("digit expected");
+		}
+
+		string matchstr = data.substr(start,datanr-start+1);
 
 		mpf_class x(matchstr,4*matchstr.length());
 
@@ -985,9 +1011,6 @@ void checktoken(command cmd)
 
 		if ( x<lo || x>hi ) error("value out of range");
 		if ( cmd.nargs()>=3 ) setvar(cmd.args[2],value_t(x));
-
-		charnr += matchend - datanr;
-		datanr = matchend;
 	}
 
 	else if ( cmd.name()=="STRING" ) {
