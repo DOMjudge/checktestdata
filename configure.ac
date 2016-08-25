@@ -41,6 +41,7 @@ AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([gmpxx.h])
 AC_CHECK_LIB(gmpxx,abs,AC_SUBST(LIBGMPXX,'-lgmpxx -lgmp'),[
 	AC_MSG_ERROR([GMPlib not found])],[-lgmp])
+AX_LIB_CXX_REGEX
 AC_LANG_POP([C++])
 
 # check for Boost library
