@@ -36,8 +36,10 @@ AC_PROG_CC
 AC_PROG_CXXCPP
 AC_PROG_CPP
 
-# Check for C++ gmpxx headers.
+# Check for C++11 with std::regex support and gmpxx headers.
 AC_LANG_PUSH([C++])
+AX_CXX_COMPILE_STDCXX(11,noext)
+AX_LIB_CXX_REGEX
 AC_CHECK_HEADERS([gmpxx.h])
 AC_CHECK_LIB(gmpxx,abs,AC_SUBST(LIBGMPXX,'-lgmpxx -lgmp'),[
 	AC_MSG_ERROR([GMPlib not found])],[-lgmp])
