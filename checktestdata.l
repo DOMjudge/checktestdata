@@ -27,6 +27,7 @@ NEWLINE  { return Parser::CMD_NEWLINE; }
 EOF      { return Parser::CMD_EOF; }
 INT      { return Parser::CMD_INT; }
 FLOAT    { return Parser::CMD_FLOAT; }
+FLOATP   { return Parser::CMD_FLOATP; }
 STRING   { return Parser::CMD_STRING; }
 REGEX    { return Parser::CMD_REGEX; }
 ASSERT   { return Parser::CMD_ASSERT; }

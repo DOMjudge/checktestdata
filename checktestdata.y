@@ -12,8 +12,8 @@
 %token TEST_EOF TEST_MATCH TEST_UNIQUE TEST_INARRAY
 %token CMP_LT CMP_GT CMP_LE CMP_GE CMP_EQ CMP_NE
 %token FUN_STRLEN
-%token CMD_SPACE CMD_NEWLINE CMD_EOF CMD_INT CMD_FLOAT CMD_STRING CMD_REGEX
-%token CMD_ASSERT CMD_SET CMD_UNSET
+%token CMD_SPACE CMD_NEWLINE CMD_EOF CMD_INT CMD_FLOAT CMD_FLOATP
+%token CMD_STRING CMD_REGEX CMD_ASSERT CMD_SET CMD_UNSET
 %token CMD_REP CMD_WHILE CMD_REPI CMD_WHILEI CMD_IF CMD_ELSE CMD_END
 %token VARNAME INTEGER FLOAT STRING
 %token OPT_FIXED OPT_SCIENTIFIC
@@ -50,6 +50,12 @@ command:
 |	CMD_FLOAT  '(' expr ',' expr ',' variable ')'    { $$ = parse_t($1,$3,$5,$7); }
 |	CMD_FLOAT  '(' expr ',' expr ',' variable ',' opt_float ')'
 	                                                 { $$ = parse_t($1,$3,$5,$7,$9); }
+|	CMD_FLOATP '(' expr ',' expr ',' expr ',' expr ')'
+                                                     { $$ = parse_t($1,$3,$5,$7,$9); }
+|	CMD_FLOATP '(' expr ',' expr ',' expr ',' expr ',' variable ')'
+                                                     { $$ = parse_t($1,$3,$5,$7,$9,$11); }
+|	CMD_FLOATP '(' expr ',' expr ',' expr ',' expr ',' variable ',' opt_float ')'
+                                                     { $$ = parse_t($1,$3,$5,$7,$9,$11,$13); }
 |	CMD_STRING '(' value ')'                         { $$ = parse_t($1,$3); }
 |	CMD_REGEX  '(' value ')'                         { $$ = parse_t($1,$3); }
 |	CMD_REGEX  '(' value ',' variable ')'            { $$ = parse_t($1,$3,$5); }
