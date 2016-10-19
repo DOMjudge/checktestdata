@@ -33,15 +33,15 @@ using namespace std;
 
 namespace checktestdata {
 
-struct value_none {};
-ostream& operator<<(ostream& os, const value_none&) {
+struct none_t {};
+ostream& operator<<(ostream& os, const none_t&) {
 	return os << "<no value>";
 }
 
 struct value_t {
-	boost::variant<mpz_class, mpf_class, string, value_none> val;
+	boost::variant<none_t, mpz_class, mpf_class, string> val;
 
-	value_t(): val(value_none()) {}
+	value_t(): val(none_t()) {}
 	explicit value_t(mpz_class x): val(x) {}
 	explicit value_t(mpf_class x): val(x) {}
 	explicit value_t(string x): val(x) {}
@@ -56,6 +56,11 @@ struct value_t {
 	// This converts any value type to a string representation.
 	string tostr() const;
 };
+
+const int value_none   = 0;
+const int value_int    = 1;
+const int value_float  = 2;
+const int value_string = 3;
 
 class doesnt_match_exception {};
 class eof_found_exception {};
@@ -239,6 +244,7 @@ value_t::operator mpf_class() const
 
 string value_t::getstr() const
 {
+	if ( val.which()!=value_string ) error("value is not a string");
 	return boost::get<string>(val);
 }
 
@@ -836,7 +842,7 @@ void gentoken(command cmd, ostream &datastream)
 			// Check if we have a preset value, then override the
 			// random generated value
 			value_t y = getvar(cmd.args[2],1);
-			if ( !boost::get<value_none>(&y.val) ) {
+			if ( !boost::get<none_t>(&y.val) ) {
 				x = y;
 				if ( x<lo || x>hi ) {
 					error("preset value for '" + string(cmd.args[2]) + "' out of range");
@@ -869,7 +875,7 @@ void gentoken(command cmd, ostream &datastream)
 			// Check if we have a preset value, then override the
 			// random generated value
 			value_t y = getvar(cmd.args[2],1);
-			if ( !boost::get<value_none>(&y.val) ) {
+			if ( !boost::get<none_t>(&y.val) ) {
 				x = y;
 				if ( x<lo || x>hi ) {
 					error("preset value for '" + string(cmd.args[2]) + "' out of range");

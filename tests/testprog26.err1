@@ -1,0 +1,4 @@
+REGEX("[a-z]+",a) SPACE REGEX("[A-Z]+",b) NEWLINE
+# This should fail since the function 'STRLEN' cannot be called
+# outside a context where a (integer) value is expected.
+STRLEN(a)
