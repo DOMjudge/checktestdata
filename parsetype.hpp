@@ -52,13 +52,17 @@ struct parse_t {
 	parse_t(val_t _val, parse_t arg1 = parse_t(),
 	                    parse_t arg2 = parse_t(),
 	                    parse_t arg3 = parse_t(),
-	                    parse_t arg4 = parse_t())
+	                    parse_t arg4 = parse_t(),
+	                    parse_t arg5 = parse_t(),
+	                    parse_t arg6 = parse_t())
 	: val(_val), args(), op(' ')
 	{
 		if ( arg1.op!='~' ) args.push_back(arg1);
 		if ( arg2.op!='~' ) args.push_back(arg2);
 		if ( arg3.op!='~' ) args.push_back(arg3);
 		if ( arg4.op!='~' ) args.push_back(arg4);
+		if ( arg5.op!='~' ) args.push_back(arg5);
+		if ( arg6.op!='~' ) args.push_back(arg6);
 	}
 
 	// Parsing arithmetic/logical/compare operator and some other
@@ -67,7 +71,9 @@ struct parse_t {
 	parse_t(char _op, parse_t arg1 = parse_t(),
 	                  parse_t arg2 = parse_t(),
 	                  parse_t arg3 = parse_t(),
-	                  parse_t arg4 = parse_t())
+	                  parse_t arg4 = parse_t(),
+	                  parse_t arg5 = parse_t(),
+	                  parse_t arg6 = parse_t())
 	: val(), args(), op(_op)
 	{
 		switch ( op ) {
@@ -117,6 +123,8 @@ struct parse_t {
 			if ( arg2.op!='~' ) args.push_back(arg2);
 			if ( arg3.op!='~' ) args.push_back(arg3);
 			if ( arg4.op!='~' ) args.push_back(arg4);
+			if ( arg5.op!='~' ) args.push_back(arg5);
+			if ( arg6.op!='~' ) args.push_back(arg6);
 		}
 	}
 

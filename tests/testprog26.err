@@ -1,2 +1,0 @@
-REGEX("[a-z]+",a) SPACE REGEX("[A-Z]+",b) NEWLINE
-STRLEN(a)

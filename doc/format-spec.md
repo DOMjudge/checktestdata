@@ -14,7 +14,7 @@ beginning of a line) and run until end of line.
 The following grammar sub-elements are defined:
 
     integer  := 0|-?[1-9][0-9]*
-    float    := -?[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?
+    float    := -?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?
     string   := ".*"
     varname  := [a-z][a-z0-9]*
     variable := <varname> | <varname> '[' <expr> [',' <expr> ...] ']'
@@ -107,6 +107,14 @@ The following commands are available:
     optionally assign the value read to the variable 'name'. When the
     option 'FIXED' or 'SCIENTIFIC' is set, only accept floating point
     numbers in fixed point or scientific notation, respectively.</dd>
+
+<dt><tt>FLOATP(&lt;expr&gt; min, &lt;expr&gt; max, &lt;value&gt; mindecimals, &lt;value&gt; maxdecimals, [, &lt;variable&gt; name [, option]])</tt></dt>
+
+<dd>Match a floating point number as above, but with number of
+    decimals in the range [mindecimals,maxdecimals]. Both must be
+    integer valued and non-negative. In this case a floating point
+    number in scientific notation must have exactly one nonzero digit
+    before the decimal point.</dd>
 
 <dt><tt>STRING(&lt;value&gt; str)</tt></dt>
 

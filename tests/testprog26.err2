@@ -1,0 +1,4 @@
+REGEX("[a-z]+",a) SPACE REGEX("[A-Z]+",b) NEWLINE
+SET(c=10)
+# This should fail, since 'c' is not a string value.
+ASSERT( STRLEN(c)==2 )

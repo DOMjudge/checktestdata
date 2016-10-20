@@ -33,15 +33,15 @@ using namespace std;
 
 namespace checktestdata {
 
-struct value_none {};
-ostream& operator<<(ostream& os, const value_none&) {
+struct none_t {};
+ostream& operator<<(ostream& os, const none_t&) {
 	return os << "<no value>";
 }
 
 struct value_t {
-	boost::variant<mpz_class, mpf_class, string, value_none> val;
+	boost::variant<none_t, mpz_class, mpf_class, string> val;
 
-	value_t(): val(value_none()) {}
+	value_t(): val(none_t()) {}
 	explicit value_t(mpz_class x): val(x) {}
 	explicit value_t(mpf_class x): val(x) {}
 	explicit value_t(string x): val(x) {}
@@ -56,6 +56,11 @@ struct value_t {
 	// This converts any value type to a string representation.
 	string tostr() const;
 };
+
+const int value_none   = 0;
+const int value_int    = 1;
+const int value_float  = 2;
+const int value_string = 3;
 
 class doesnt_match_exception {};
 class eof_found_exception {};
@@ -239,6 +244,7 @@ value_t::operator mpf_class() const
 
 string value_t::getstr() const
 {
+	if ( val.which()!=value_string ) error("value is not a string");
 	return boost::get<string>(val);
 }
 
@@ -817,6 +823,24 @@ string genregex(string exp)
 	return res;
 }
 
+// Parse {min,max}decimals in FLOATP command.
+void getdecrange(command cmd, int *decrange)
+{
+	// Read {min,max}decimals range for float.
+	for(int i=0; i<2; i++) {
+		value_t arg = eval(cmd.args[2+i]);
+		if ( arg.val.which()!=value_int ) {
+			error((i==0 ? "min":"max")+string("decimal is not an integer"));
+		}
+		mpz_class val = arg;
+		if ( val<0 || val>=INT_MAX ) {
+			error(string("the value of ")+(i==0 ? "min":"max")+"decimal is out of range");
+		}
+		decrange[i] = val.get_si();
+	}
+	if ( decrange[0]>decrange[1] ) error("invalid decimals range specified");
+}
+
 void gentoken(command cmd, ostream &datastream)
 {
 	currcmd = cmd;
@@ -836,7 +860,7 @@ void gentoken(command cmd, ostream &datastream)
 			// Check if we have a preset value, then override the
 			// random generated value
 			value_t y = getvar(cmd.args[2],1);
-			if ( !boost::get<value_none>(&y.val) ) {
+			if ( !boost::get<none_t>(&y.val) ) {
 				x = y;
 				if ( x<lo || x>hi ) {
 					error("preset value for '" + string(cmd.args[2]) + "' out of range");
@@ -848,15 +872,24 @@ void gentoken(command cmd, ostream &datastream)
 		datastream << x.get_str();
 	}
 
-	else if ( cmd.name()=="FLOAT" ) {
+	else if ( cmd.name()=="FLOAT" || cmd.name()=="FLOATP" ) {
 		mpf_class lo = eval(cmd.args[0]);
 		mpf_class hi = eval(cmd.args[1]);
 
-		// Safe old I/O format flags to restore later
-		ios_base::fmtflags flg = datastream.flags();
-		if ( cmd.nargs()>=4 ) {
-			if ( cmd.args[3].name()=="SCIENTIFIC" ) datastream << scientific;
-			else if ( cmd.args[3].name()=="FIXED" ) datastream << fixed;
+		char floatspec = 'f'; // Default to fixed point notation
+		int ndecimals = 15; // Default number of decimals shown
+
+		size_t nbaseargs = 2;
+		int decrange[2];
+		if ( cmd.name()=="FLOATP" ) {
+			nbaseargs = 4;
+			getdecrange(cmd,decrange);
+			ndecimals = decrange[1];
+		}
+
+		if ( cmd.nargs()>=nbaseargs+2 ) {
+			if ( cmd.args[nbaseargs+1].name()=="SCIENTIFIC" ) floatspec = 'E';
+			else if ( cmd.args[nbaseargs+1].name()=="FIXED" ) floatspec = 'f';
 			else {
 				cerr << "invalid option in " << program[prognr] << endl;
 				exit(exit_failure);
@@ -865,23 +898,23 @@ void gentoken(command cmd, ostream &datastream)
 
 		mpf_class x(lo + gmp_rnd.get_f()*(hi-lo));
 
-		if ( cmd.nargs()>=3 ) {
+		if ( cmd.nargs()>=nbaseargs+1 ) {
 			// Check if we have a preset value, then override the
 			// random generated value
-			value_t y = getvar(cmd.args[2],1);
-			if ( !boost::get<value_none>(&y.val) ) {
+			value_t y = getvar(cmd.args[nbaseargs],1);
+			if ( !boost::get<none_t>(&y.val) ) {
 				x = y;
 				if ( x<lo || x>hi ) {
-					error("preset value for '" + string(cmd.args[2]) + "' out of range");
+					error("preset value for '" + string(cmd.args[nbaseargs]) +
+					      "' out of range");
 				}
 			}
 			setvar(cmd.args[2],value_t(x));
 		}
 
-		datastream << x;
-
-		// Restore saved I/O formatting
-		datastream.flags(flg);
+		char tmp[256];
+		gmp_snprintf(tmp,255,(string("%.*F")+floatspec).c_str(),ndecimals,x.get_mpf_t());
+		datastream << tmp;
 	}
 
 	else if ( cmd.name()=="STRING" ) {
@@ -957,7 +990,7 @@ void checktoken(command cmd)
 		charnr += len;
 	}
 
-	else if ( cmd.name()=="FLOAT" ) {
+	else if ( cmd.name()=="FLOAT" || cmd.name()=="FLOATP" ) {
 		// Accepts format -?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?
 		// where the last optional part, the exponent, is not allowed
 		// with the FIXED option and required with the SCIENTIFIC option.
@@ -966,10 +999,18 @@ void checktoken(command cmd)
 		string fixed_regex("-?[0-9]+(\\.[0-9]+)?");
 		string scien_regex("-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+");
 
+		size_t nbaseargs = 2;
+		int decrange[2];
+		if ( cmd.name()=="FLOATP" ) {
+			// Read {min,max}decimals range for float.
+			nbaseargs = 4;
+			getdecrange(cmd,decrange);
+		}
+
 		int opt = 0; // 1 = scientific, 2 = fixed.
-		if ( cmd.nargs()>=4 ) {
-			if ( cmd.args[3].name()=="SCIENTIFIC" ) opt = 1;
-			else if ( cmd.args[3].name()=="FIXED" ) opt = 2;
+		if ( cmd.nargs()>=nbaseargs+2 ) {
+			if ( cmd.args[nbaseargs+1].name()=="SCIENTIFIC" ) opt = 1;
+			else if ( cmd.args[nbaseargs+1].name()=="FIXED" ) opt = 2;
 			else {
 				cerr << "invalid option in " << program[prognr] << endl;
 				exit(exit_failure);
@@ -981,23 +1022,25 @@ void checktoken(command cmd)
 		if ( datanr<data.size() && data[datanr]=='-' ) { datanr++; charnr++; }
 		// Match base with optional decimal dot:
 		if ( datanr>=data.size() || !isdigit(data[datanr]) ) error("digit expected");
-		bool dot_seen = false, first_digit = true;
+		size_t digitpos = datanr, dotpos = string::npos;
 		while ( datanr<data.size() &&
 		        (isdigit(data[datanr]) ||
-		         (!dot_seen && !first_digit && data[datanr]=='.')) ) {
-			first_digit = false;
-			if ( data[datanr]=='.' ) dot_seen = true;
+		         (dotpos==string::npos && digitpos!=datanr && data[datanr]=='.')) ) {
+			if ( data[datanr]=='.' ) dotpos = datanr;
 			datanr++;
 			charnr++;
 		}
 		// Check that any dot is followed by digit:
 		if ( !isdigit(data[datanr-1]) ) error("digit expected");
 
+		size_t exppos = datanr;
+		bool has_exp = false;
 		// Match exponent:
 		if ( opt==1 || (opt==0 && datanr<data.size() && toupper(data[datanr])=='E') ) {
 			if ( datanr>=data.size() || toupper(data[datanr])!='E' ) {
 				error("exponent 'E' expected");
 			}
+			has_exp = true;
 			datanr++;
 			charnr++;
 			if ( datanr<data.size() && (data[datanr]=='-' || data[datanr]=='+') ) {
@@ -1011,6 +1054,18 @@ void checktoken(command cmd)
 			if ( !isdigit(data[datanr-1]) ) error("digit expected");
 		}
 
+		if ( cmd.name()=="FLOATP" ) {
+			if ( has_exp && (data[digitpos]=='0' || dotpos!=digitpos+1) ) {
+				error("exactly one non-zero before the decimal dot expected");
+			}
+			int ndecimals = (dotpos==string::npos ? 0 : exppos - dotpos - 1);
+			if ( ndecimals<decrange[0] || ndecimals>decrange[1] ) {
+				char tmp[100];
+				sprintf(tmp,"%d not in [%d,%d]",ndecimals,decrange[0],decrange[1]);
+				error("number of decimals not within specified range: "+string(tmp));
+			}
+		}
+
 		string matchstr = data.substr(start,datanr-start+1);
 
 		mpf_class x(matchstr,4*matchstr.length());
@@ -1019,7 +1074,7 @@ void checktoken(command cmd)
 		mpf_class hi = eval(cmd.args[1]);
 
 		if ( x<lo || x>hi ) error("value out of range");
-		if ( cmd.nargs()>=3 ) setvar(cmd.args[2],value_t(x));
+		if ( cmd.nargs()>=nbaseargs+1 ) setvar(cmd.args[nbaseargs],value_t(x));
 	}
 
 	else if ( cmd.name()=="STRING" ) {
