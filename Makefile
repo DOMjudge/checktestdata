@@ -89,6 +89,8 @@ check: checktestdata
 	@opts='-g -p n=10,pi=0.31415E1,foo="\"bar' ; \
 	prog=tests/testpresetprog.in  ; $(checkfail) ; \
 	true
+# Another test for debugging to improve code coverage:
+	@opts=-d ; prog=tests/testprog1.in ; data=tests/testdata1.in ; $(checksucc) ; true
 # Test if generating testdata works and complies with the script:
 	@TMP=`mktemp --tmpdir dj_gendata.XXXXXX` || exit 1 ; data=$$TMP ; \
 	for i in tests/testprog*.in ; do \
