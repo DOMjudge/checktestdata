@@ -6,12 +6,14 @@ module Checktestdata.Derived (
   newline,
 
   -- * Utilities
+  match,
   assert,
   unique ) where
 
 import Checktestdata.Core
 import Control.Monad      ( when )
 import qualified Data.Set as Set
+import Numeric
 
 --------------------------------------------------------------------------------
 -- Input readers
@@ -29,13 +31,16 @@ int low high = do
 
 -- | Get the next float which should be between the given lower
 --   and upper bound (inclusive).
-float :: (Fractional a, Ord a, Show a) => a -> a -> CTD a
+float :: Rational -> Rational -> CTD Rational
 float low high = do
-  i <- fromRational <$> nextFloat
+  i <- nextFloat
   when (i < low || i > high) $
     fail $ "Value out of range in "
-      ++ show low ++ " <= " ++ show i ++ " <= " ++ show high
+      ++ showF low ++ " <= " ++ showF i ++ " <= " ++ showF high
   return i
+
+showF :: Rational -> String
+showF x = show (fromRat x :: Double)
 
 -- | Check that the next character is a space.
 space :: CTD ()
@@ -50,6 +55,14 @@ newline = do
   c <- nextChar
   when (c /= '\n') $
     fail $ "Newline expected"
+
+-- | Match any of the given characters
+match :: String -> CTD Bool
+match s = do
+  mbC <- peekChar
+  case mbC of
+    Just c | c `elem` s -> return True
+    _                   -> return False
 
 --------------------------------------------------------------------------------
 -- Utilities

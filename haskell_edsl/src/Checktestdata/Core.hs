@@ -11,6 +11,7 @@ module Checktestdata.Core (
   nextInt,
   nextHex,
   nextFloat,
+  string,
   eof,
   isEOF,
   ) where
@@ -161,6 +162,15 @@ nextHex = nextReader "Could not parse as hexadecimal" $ INT.readSigned INT.readH
 -- | Get the next floating point number from the input.
 nextFloat :: CTD Rational
 nextFloat = nextReader "Could not parse as floating point" $ FR.readSigned FR.readExponential
+
+-- | Match the given literal string
+string :: String -> CTD ()
+string s = PrimOp $ do
+  cs <- getRemaining
+  case BS.isPrefixOf (BS.pack s) cs of
+    False -> failWithLocation $ "Expected " ++ show s
+    True  -> do
+      putRemaining $ BS.drop (length s) cs
 
 -- | Check whether we are at the end of the file.
 isEOF :: CTD Bool
