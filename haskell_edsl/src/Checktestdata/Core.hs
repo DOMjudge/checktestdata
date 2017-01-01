@@ -12,6 +12,7 @@ module Checktestdata.Core (
   nextHex,
   nextFloat,
   string,
+  regex,
   eof,
   isEOF,
   ) where
@@ -20,6 +21,9 @@ import Data.ByteString.Char8 ( ByteString )
 import qualified Data.ByteString.Char8          as BS
 import qualified Data.ByteString.Lex.Fractional as FR
 import qualified Data.ByteString.Lex.Integral   as INT
+
+import Text.Regex.TDFA
+import Text.Regex.TDFA.ByteString
 
 import Control.Monad.State
 import Control.Monad.Trans.Either
@@ -171,6 +175,24 @@ string s = PrimOp $ do
     False -> failWithLocation $ "Expected " ++ show s
     True  -> do
       putRemaining $ BS.drop (length s) cs
+
+-- | Match with the given regular expression
+regex :: String -> CTD String
+regex rs = PrimOp $ do
+  let reg = compile defaultCompOpt defaultExecOpt $ BS.pack rs
+  case reg of
+    Left e  -> failWithLocation e
+    Right r -> do
+      cs <- getRemaining
+      let err = "Expression " ++ show rs ++ " does not match"
+      case regexec r cs of
+        Right (Just (pre,main,post,_)) -> case BS.null pre of
+          True  -> do
+            putRemaining post
+            return $ BS.unpack main
+          False -> failWithLocation err
+        Left e  -> failWithLocation e
+        Right _ -> failWithLocation err
 
 -- | Check whether we are at the end of the file.
 isEOF :: CTD Bool
