@@ -1,5 +1,6 @@
 module Checktestdata.Script.AST (
-  Var,
+  VarName,
+  Var (..),
   Block,
   AST (..),
   Expr (..),
@@ -8,9 +9,11 @@ module Checktestdata.Script.AST (
   Test (..),
   CompOp (..),
   ) where
--- data Var = Var String [Expr]
 
-type Var = String
+type VarName = String
+
+data Var = Var VarName [Expr]
+         deriving ( Show )
 
 type Block = [AST]
 
@@ -20,11 +23,12 @@ data AST = CSpace
          | CInt Expr Expr (Maybe Var)
          | CFloat Expr Expr (Maybe Var) (Maybe FloatOption)
          | CString Expr
+         | CRegex Expr (Maybe Var)
          | CRep (Maybe Var) Expr (Maybe AST) Block -- var, count, separator, body
          | CWhile (Maybe Var) Test (Maybe AST) Block
          | CAssert Test
          | CSet [(Var, Expr)]
-         | CUnset [Var]
+         | CUnset [VarName]
          | CIf Test Block (Maybe Block)
          deriving (Show)
 
@@ -54,8 +58,8 @@ data Test = Not Test
           | And Test Test
           | Or Test Test
           | Match Expr
-          | Unique [Var]
-          | InArray Expr Var
+          | Unique [VarName]
+          | InArray Expr VarName
           | IsEOF
           deriving (Show)
 
