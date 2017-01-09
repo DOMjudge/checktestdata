@@ -1,0 +1,42 @@
+name:                checktestdata
+version:             2.0.0
+synopsis:            Checktestdata is a tool to verify the syntactical integrity of test cases in programming contests like the ACM ICPC.
+-- description:         
+homepage:            https://www.domjudge.org/
+license:             BSD3
+license-file:        LICENSE
+author:              DOMjudge developers, Jeroen Bransen
+maintainer:          domjudge-devel@domjudge.org
+-- copyright:           
+category:            Text
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Checktestdata,
+                       Checktestdata.Script
+  other-modules:       Checktestdata.Derived,
+                       Checktestdata.Core,
+                       Checktestdata.Script.AST,
+                       Checktestdata.Script.Interpreter,
+                       Checktestdata.Script.Parser
+  other-extensions:    GADTs
+  build-depends:       base >=4.7 && <4.10,
+                       bytestring >=0.10 && <0.11,
+                       bytestring-lexing >=0.5 && <0.6,
+                       containers >=0.5 && <0.6,
+                       either >=4.3 && <4.5,
+                       mtl >=2.2 && <2.3,
+                       regex-tdfa >= 1.2,
+                       uu-parsinglib >= 2.9
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -Wall -O2
+
+executable checktestdata
+  main-is:             Main.hs
+  hs-source-dirs:      src-main
+  build-depends:       base >=4.7 && <4.10,
+                       checktestdata -any
+  default-language:    Haskell2010
+  ghc-options:         -Wall -O2

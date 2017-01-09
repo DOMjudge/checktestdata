@@ -1066,7 +1066,9 @@ void checktoken(command cmd)
 			}
 		}
 
-		string matchstr = data.substr(start,datanr-start+1);
+		string matchstr = data.substr(start,datanr-start);
+
+		debug("parsing float '%s', exponent = %d",matchstr.c_str(),has_exp);
 
 		mpf_class x(matchstr,4*matchstr.length());
 
