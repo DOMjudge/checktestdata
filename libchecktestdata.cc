@@ -1097,8 +1097,7 @@ void checktoken(command cmd)
 		match_results<string::const_iterator> res;
 		string matchstr;
 
-		if ( !regex_search((string::const_iterator)&data[datanr],
-		                   (string::const_iterator)data.end(),
+		if ( !regex_search(data.cbegin()+datanr,data.cend(),
 		                   res,regexstr,regex_constants::match_continuous) ) {
 			error();
 		} else {
