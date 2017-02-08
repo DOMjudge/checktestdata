@@ -3,7 +3,7 @@ Upstream-Name: checktestdata
 Source: https://github.com/DOMjudge/checktestdata
 
 Files: *
-Copyright: 2008 - 2016 by the checktestdata developers and all respective contributors
+Copyright: 2008 - 2017 by the checktestdata developers and all respective contributors
 License: BSD-2-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
