@@ -995,10 +995,6 @@ void checktoken(command cmd)
 		// where the last optional part, the exponent, is not allowed
 		// with the FIXED option and required with the SCIENTIFIC option.
 
-		string float_regex("-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
-		string fixed_regex("-?[0-9]+(\\.[0-9]+)?");
-		string scien_regex("-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+");
-
 		size_t nbaseargs = 2;
 		int decrange[2];
 		if ( cmd.name()=="FLOATP" ) {
