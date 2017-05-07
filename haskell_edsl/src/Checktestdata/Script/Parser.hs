@@ -20,7 +20,8 @@ import Text.ParserCombinators.UU.Utils
 parseScript :: FilePath -> IO Block
 parseScript fp = do
   contents <- readFile fp
-  return $ runParser fp (pSpaces *> pBlock) (dropComments contents)
+  let b = runParser fp (pSpaces *> pBlock) (dropComments contents)
+  b `seq` return b
 
 -- | Remove all comments from the text. This is less trivial than it seems
 --   as # may also be inside a string literal.
