@@ -31,6 +31,17 @@ main = do
     -- Go over the failure testdata files
     let isFailure f = ("testdata"++ testnum ++ ".err") `isPrefixOf` f
     forM_ (filter isFailure allfiles) $ \dataf -> checkFailure prog dataf
+
+  -- Go over all test programs that should fail
+  let isErrProg f = "testprog" `isPrefixOf` f && ".err" `isSuffixOf` f
+  forM_ (filter isErrProg allfiles) $ \prog -> do
+    -- Get the test num
+    let testnum = takeWhile (/='.') $ drop (length "testprog") prog
+    
+    -- Go over the correct testdata files
+    let isCorrect f = ("testdata"++ testnum ++ ".in") `isPrefixOf` f
+    forM_ (filter isCorrect allfiles) $ \dataf -> checkFailure prog dataf
+
     
 -- | Run the prog on the given data file and ensure that it succeeded.
 checkSuccess :: FilePath -> FilePath -> IO ()
