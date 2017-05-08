@@ -5,10 +5,11 @@ module Checktestdata.Script.AST (
   AST (..),
   Expr (..),
   BinOp (..),
-  FloatOption (..),
   Test (..),
   CompOp (..),
   ) where
+
+import Checktestdata.Options ( FloatOption )
 
 type VarName = String
 
@@ -21,7 +22,8 @@ data AST = CSpace
          | CNewline
          | CEOF
          | CInt Expr Expr (Maybe Var)
-         | CFloat Expr Expr (Maybe Var) (Maybe FloatOption)
+         | CFloat Expr Expr (Maybe Var) FloatOption
+         | CFloatP Expr  Expr Expr Expr (Maybe Var) FloatOption
          | CString Expr
          | CRegex Expr (Maybe Var)
          | CRep (Maybe Var) Expr (Maybe AST) Block -- var, count, separator, body
@@ -32,17 +34,13 @@ data AST = CSpace
          | CIf Test Block (Maybe Block)
          deriving (Show)
 
-data FloatOption = Scientific
-                 | Fixed
-                 deriving (Show)
-
 data Expr = EVar Var
           | ConstI Integer
           | ConstF Rational
           | ConstS String
           | Negate Expr
           | BinOp BinOp Expr Expr
-          | StrLen Expr -- todo
+          | StrLen Expr
           deriving (Show)
 
 data BinOp = Plus

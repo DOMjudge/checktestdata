@@ -4,6 +4,7 @@ module Checktestdata.Script.Parser (
   parseScript
   ) where
 
+import Checktestdata.Options      ( FloatOption (..) )
 import Checktestdata.Script.AST
 
 import Data.Char
@@ -58,13 +59,25 @@ pAST = CSpace    <$  pSymbol "SPACE"
                  <*> pExpr
                  <*> (Just <$ pComma <*> pVar <<|> pure Nothing)
                  <*  pRParen
+   <<|> CFloatP  <$  pSymbol "FLOATP"
+                 <*  pLParen
+                 <*> pExpr
+                 <*  pComma
+                 <*> pExpr
+                 <*  pComma
+                 <*> pExpr
+                 <*  pComma
+                 <*> pExpr
+                 <*> (Just <$ pComma <*> pVar <<|> pure Nothing)
+                 <*> (pComma *> pFloatOption <<|> pure Both)
+                 <*  pRParen
    <<|> CFloat   <$  pSymbol "FLOAT"
                  <*  pLParen
                  <*> pExpr
                  <*  pComma
                  <*> pExpr
                  <*> (Just <$ pComma <*> pVar <<|> pure Nothing)
-                 <*> (Just <$ pComma <*> pFloatOption <<|> pure Nothing)
+                 <*> (pComma *> pFloatOption <<|> pure Both)
                  <*  pRParen
    <<|> CRep     <$  pSymbol "REPI"
                  <*  pLParen

@@ -10,11 +10,12 @@ module Checktestdata (
   -- * Primitives
   peekChar,
   nextChar,
-  nextInt,
+  nextNat,
   nextHex,
   nextFloat,
   
   -- * Input readers
+  nextInt,
   int,
   float,
   space,

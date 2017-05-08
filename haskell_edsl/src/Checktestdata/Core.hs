@@ -8,15 +8,21 @@ module Checktestdata.Core (
   -- * Primitives
   peekChar,
   nextChar,
+  nextNat,
   nextInt,
   nextHex,
   nextFloat,
+  nextFloatP,
   string,
   regex,
   eof,
   isEOF,
   ) where
 
+import Checktestdata.Options ( FloatOption (..) )
+
+import Data.Char             ( isDigit, toUpper )
+import Data.Maybe            ( fromMaybe, isJust )
 import Data.ByteString.Char8 ( ByteString )
 import qualified Data.ByteString.Char8          as BS
 import qualified Data.ByteString.Lex.Fractional as FR
@@ -155,17 +161,90 @@ nextReader msg reader = PrimOp $ do
     Nothing    -> failWithLocation msg
     Just (n,r) -> putRemaining r >> return n
 
--- | Get the next integer from the input.
+-- | Get the next non-negative integer from the input.
+nextNat :: CTD Integer
+nextNat = PrimOp $ do
+  -- Take prefix of the digits
+  cs <- getRemaining
+  let (num,rest) = BS.span isDigit cs
+
+  -- Check validity
+  when (BS.null num) $
+    failWithLocation "Integer expected"
+  when (BS.length num >= 2 && BS.head num == '0') $
+    failWithLocation "Prefix zero(s)"
+
+  -- Use efficient library for converting to actual integer
+  putRemaining rest
+  return $ INT.readDecimal_ num
+
+-- | Get the next integer from the input. Accepts format (0|-?[1-9][0-9]*),
+--   i.e. no leading zero's and no '-0' accepted.
 nextInt :: CTD Integer
-nextInt = nextReader "Could not parse as integer" $ INT.readSigned INT.readDecimal
+nextInt = do
+  mbC <- peekChar
+  case mbC of
+    Just '-' -> do
+      '-' <- nextChar
+      i <- nextNat
+      when (i == 0) $ fail "Invalid minus sign (-0 not allowed)"
+      return (-i)
+    _        -> nextNat
 
 -- | Get the next hexadecimal number from the input.
 nextHex :: CTD Integer
 nextHex = nextReader "Could not parse as hexadecimal" $ INT.readSigned INT.readHexadecimal
 
--- | Get the next floating point number from the input.
-nextFloat :: CTD Rational
-nextFloat = nextReader "Could not parse as floating point" $ FR.readSigned FR.readExponential
+-- | Helper for checking the float format
+checkFloatFormat :: FloatOption -> ByteString -> InternalMonad ()
+checkFloatFormat format digs = res where
+  hasexp = isJust $ BS.findIndex (\x -> toUpper x == 'E') digs
+  res = case format of
+    Scientific | not hasexp -> failWithLocation "Scientific notation expected"
+    Fixed      | hasexp     -> failWithLocation "Fixed notation expected"
+    _                       -> return ()
+
+-- | Get the next floating point number from the input in the given format.
+nextFloat :: FloatOption -> CTD Rational
+nextFloat format = PrimOp $ do
+  cs <- getRemaining
+  case FR.readSigned FR.readExponential cs of
+    Nothing -> failWithLocation "Could not parse as floating point"
+    Just (n,r) -> do
+      putRemaining r
+      let digs = BS.take (BS.length cs - BS.length r) cs
+      checkFloatFormat format digs
+      return n
+
+-- | Get the next floating point number from the input in the given format,
+--   with a number of decimals in the given range.
+nextFloatP :: Int -> Int -> FloatOption -> CTD Rational
+nextFloatP pmin pmax format = PrimOp $ do
+  cs <- getRemaining
+  case FR.readSigned FR.readExponential cs of
+    Nothing -> failWithLocation "Could not parse as floating point"
+    Just (n,r) -> do
+      putRemaining r
+      -- Get the matching string and check number of decimal digits
+      let sn = BS.take (BS.length cs - BS.length r) cs
+      let digitpos = fromMaybe (error "digitpos: impossible") $ BS.findIndex isDigit sn
+      let dotpos = BS.elemIndex '.' sn
+      let exppos = BS.findIndex (\x -> toUpper x == 'E') sn
+      let hasexp = isJust exppos
+      let ndecimals = case dotpos of
+            Nothing -> 0
+            Just i  -> fromMaybe (BS.length sn) exppos - i - 1
+      case dotpos of
+        Just dp | hasexp && (BS.index sn digitpos == '0' || dp /= digitpos + 1) ->
+                    failWithLocation "exactly one non-zero before the decimal dot expected"
+        _ -> return ()
+      when (ndecimals < pmin || ndecimals > pmax) $
+        failWithLocation $ "Number of decimals (" ++ show ndecimals ++ ") not "
+                           ++ "within specified range " ++ show (pmin,pmax)
+      checkFloatFormat format sn
+
+      -- Return the result
+      return n
 
 -- | Match the given literal string
 string :: String -> CTD ()

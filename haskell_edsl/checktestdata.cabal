@@ -14,7 +14,8 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Checktestdata,
-                       Checktestdata.Script
+                       Checktestdata.Script,
+                       Checktestdata.Options
   other-modules:       Checktestdata.Derived,
                        Checktestdata.Core,
                        Checktestdata.Script.AST,
