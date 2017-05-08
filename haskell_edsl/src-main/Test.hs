@@ -9,6 +9,7 @@ import Control.Exception
 import System.Directory ( listDirectory )
 import Data.List        ( isPrefixOf, isSuffixOf )
 
+import System.Exit      ( exitFailure )
 
 testsdir :: String
 testsdir = "../tests/"
@@ -20,44 +21,52 @@ main = do
 
   -- Go over all regular test programs
   let isProg f = "testprog" `isPrefixOf` f && ".in" `isSuffixOf` f
-  forM_ (filter isProg allfiles) $ \prog -> do
+  r1 <- forM (filter isProg allfiles) $ \prog -> do
     -- Get the test num
     let testnum = takeWhile (/='.') $ drop (length "testprog") prog
     
     -- Go over the correct testdata files
     let isCorrect f = ("testdata"++ testnum ++ ".in") `isPrefixOf` f
-    forM_ (filter isCorrect allfiles) $ \dataf -> checkSuccess prog dataf
+    r2 <- forM (filter isCorrect allfiles) $ \dataf -> checkSuccess prog dataf
     
     -- Go over the failure testdata files
     let isFailure f = ("testdata"++ testnum ++ ".err") `isPrefixOf` f
-    forM_ (filter isFailure allfiles) $ \dataf -> checkFailure prog dataf
+    r3 <- forM (filter isFailure allfiles) $ \dataf -> checkFailure prog dataf
+
+    return $ r2 ++ r3
 
   -- Go over all test programs that should fail
   let isErrProg f = "testprog" `isPrefixOf` f && ".err" `isSuffixOf` f
-  forM_ (filter isErrProg allfiles) $ \prog -> do
+  r4 <- forM (filter isErrProg allfiles) $ \prog -> do
     -- Get the test num
     let testnum = takeWhile (/='.') $ drop (length "testprog") prog
     
     -- Go over the correct testdata files
     let isCorrect f = ("testdata"++ testnum ++ ".in") `isPrefixOf` f
-    forM_ (filter isCorrect allfiles) $ \dataf -> checkFailure prog dataf
+    forM (filter isCorrect allfiles) $ \dataf -> checkFailure prog dataf
 
+  -- Check that all tests succeeded
+  when (not $ and $ concat $ r1 ++ r4) $ exitFailure
     
 -- | Run the prog on the given data file and ensure that it succeeded.
-checkSuccess :: FilePath -> FilePath -> IO ()
+checkSuccess :: FilePath -> FilePath -> IO Bool
 checkSuccess prog dataf = do
   res <- checkRun prog dataf
   case res of
-    Right () -> return ()
-    Left _   -> putStrLn $ "Running " ++ prog ++ " on " ++ dataf ++ " did not succeed"
+    Right () -> return True
+    Left _   -> do
+      putStrLn $ "Running " ++ prog ++ " on " ++ dataf ++ " did not succeed"
+      return False
 
 -- | Run the prog on the given data file and ensure that it failed
-checkFailure :: FilePath -> FilePath -> IO ()
+checkFailure :: FilePath -> FilePath -> IO Bool
 checkFailure prog dataf = do
   res <- checkRun prog dataf
   case res of
-    Right () -> putStrLn $ "Running " ++ prog ++ " on " ++ dataf ++ " did not fail"
-    Left _   -> return ()
+    Left _   -> return True
+    Right () -> do
+      putStrLn $ "Running " ++ prog ++ " on " ++ dataf ++ " did not fail"
+      return False
 
 -- | Run the prog on the given data file and return it's success or failure
 checkRun :: FilePath -> FilePath -> IO (Either String ())
