@@ -1,3 +1,4 @@
-REGEX(".*") NEWLINE
+# Note that ERE '.' also matches newlines!
+REGEX("[^\n]*") NEWLINE
 SET(a=1/2)
 ASSERT(a == 0.5)

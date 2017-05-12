@@ -1,2 +1,2 @@
 REGEX("\\\\(foo|(bar|baz))\
-x\n[\\.-\\}]") NEWLINE
+x\n[.-}]") NEWLINE

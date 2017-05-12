@@ -1089,7 +1089,7 @@ void checktoken(command cmd)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string str = eval(cmd.args[0]).getstr();
-		regex regexstr(str);
+		regex regexstr(str,regex::extended);
 		match_results<string::const_iterator> res;
 		string matchstr;
 
