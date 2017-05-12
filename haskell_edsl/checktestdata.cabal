@@ -1,13 +1,13 @@
 name:                checktestdata
 version:             2.0.0
 synopsis:            Checktestdata is a tool to verify the syntactical integrity of test cases in programming contests like the ACM ICPC.
--- description:         
+-- description:
 homepage:            https://www.domjudge.org/
 license:             BSD3
 license-file:        LICENSE
 author:              DOMjudge developers, Jeroen Bransen
 maintainer:          domjudge-devel@domjudge.org
--- copyright:           
+-- copyright:
 category:            Text
 build-type:          Simple
 cabal-version:       >=1.10
