@@ -93,10 +93,17 @@ fAST (CInt low up var) = do
   vup <- fExpr up >>= toInt
   val <- liftC $ int vlow vup
   setValue var (VInt val)
-fAST (CFloat low up var _) = do -- todo: scientific/fixed option
+fAST (CFloat low up var format) = do
   vlow <- fExpr low >>= toFloat
   vup <- fExpr up >>= toFloat
-  val <- liftC $ float vlow vup
+  val <- liftC $ floatOpt vlow vup format
+  setValue var (VFloat val)
+fAST (CFloatP low up pmin pmax var format) = do
+  vlow <- fExpr low >>= toFloat
+  vup <- fExpr up >>= toFloat
+  vpmin <- fExpr pmin >>= toInt
+  vpmax <- fExpr pmax >>= toInt
+  val <- liftC $ floatPOpt vlow vup (fromInteger vpmin) (fromInteger vpmax) format
   setValue var (VFloat val)
 fAST (CString s) = do
   str <- fExpr s >>= toString

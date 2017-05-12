@@ -745,7 +745,11 @@ string genregex(string exp)
 		case '[':
 			{
 				set<char> possible;
-				bool escaped = false;
+				bool escaped = false, inverted = false;
+				if ( i + 1 < exp.length() && exp[i+1] == '^' ) {
+					inverted = true;
+					i++;
+				}
 				while (i + 1 < exp.length()) {
 					i++;
 					if (escaped) {
@@ -773,7 +777,13 @@ string genregex(string exp)
 					}
 				}
 				vector<char> possibleVec;
-				copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
+				if ( inverted ) {
+					for (char c = ' '; c <= '~'; c++) {
+						if ( !possible.count(c) ) possibleVec.push_back(c);
+					}
+				} else {
+					copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
+				}
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
 					res += possibleVec[random() % possibleVec.size()];
@@ -995,10 +1005,6 @@ void checktoken(command cmd)
 		// where the last optional part, the exponent, is not allowed
 		// with the FIXED option and required with the SCIENTIFIC option.
 
-		string float_regex("-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
-		string fixed_regex("-?[0-9]+(\\.[0-9]+)?");
-		string scien_regex("-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+");
-
 		size_t nbaseargs = 2;
 		int decrange[2];
 		if ( cmd.name()=="FLOATP" ) {
@@ -1093,7 +1099,7 @@ void checktoken(command cmd)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string str = eval(cmd.args[0]).getstr();
-		regex regexstr(str);
+		regex regexstr(str,regex::extended);
 		match_results<string::const_iterator> res;
 		string matchstr;
 

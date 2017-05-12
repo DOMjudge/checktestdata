@@ -1,5 +1,5 @@
 # ===========================================================================
-#       http://www.gnu.org/software/autoconf-archive/ax_boost_base.html
+#      https://www.gnu.org/software/autoconf-archive/ax_boost_base.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -33,7 +33,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 26
+#serial 29
 
 AC_DEFUN([AX_BOOST_BASE],
 [
@@ -96,21 +96,21 @@ if test "x$want_boost" = "xyes"; then
         libsubdirs="lib64 libx32 lib lib64"
         ;;
       ppc64|s390x|sparc64|aarch64|ppc64le)
-        libsubdirs="lib64 lib lib64 ppc64le"
+        libsubdirs="lib64 lib lib64"
         ;;
     esac
 
     dnl allow for real multi-arch paths e.g. /usr/lib/x86_64-linux-gnu. Give
     dnl them priority over the other paths since, if libs are found there, they
-    dnl are almost assuredly the ones desired. First add fallback architectures
-    dnl to make sure that the canonical architecture has preference.
+    dnl are almost assuredly the ones desired.
     AC_REQUIRE([AC_CANONICAL_HOST])
+    libsubdirs="lib/${host_cpu}-${host_os} $libsubdirs"
+
     case ${host_cpu} in
-      i?86|x86_64)
+      i?86)
         libsubdirs="lib/i386-${host_os} $libsubdirs"
         ;;
     esac
-    libsubdirs="lib/${host_cpu}-${host_os} $libsubdirs"
 
     dnl first we check the system location for boost libraries
     dnl this location ist chosen if boost libraries are installed with the --layout=system option
@@ -176,7 +176,9 @@ if test "x$want_boost" = "xyes"; then
         CPPFLAGS="$CPPFLAGS_SAVED"
         LDFLAGS="$LDFLAGS_SAVED"
         BOOST_CPPFLAGS=
-        BOOST_LDFLAGS=
+        if test "$ac_boost_lib_path" = ""; then
+            BOOST_LDFLAGS=
+        fi
         _version=0
         if test "$ac_boost_path" != ""; then
             if test -d "$ac_boost_path" && test -r "$ac_boost_path"; then
