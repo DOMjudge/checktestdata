@@ -745,7 +745,11 @@ string genregex(string exp)
 		case '[':
 			{
 				set<char> possible;
-				bool escaped = false;
+				bool escaped = false, inverted = false;
+				if ( i + 1 < exp.length() && exp[i+1] == '^' ) {
+					inverted = true;
+					i++;
+				}
 				while (i + 1 < exp.length()) {
 					i++;
 					if (escaped) {
@@ -773,7 +777,13 @@ string genregex(string exp)
 					}
 				}
 				vector<char> possibleVec;
-				copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
+				if ( inverted ) {
+					for (char c = ' '; c <= '~'; c++) {
+						if ( !possible.count(c) ) possibleVec.push_back(c);
+					}
+				} else {
+					copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
+				}
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
 					res += possibleVec[random() % possibleVec.size()];
