@@ -238,6 +238,8 @@ nextFloatP pmin pmax format = PrimOp $ do
         Just dp | hasexp && (BS.index sn digitpos == '0' || dp /= digitpos + 1) ->
                     failWithLocation "exactly one non-zero before the decimal dot expected"
         _ -> return ()
+      when (pmin < 0 || pmin > pmax) $
+        failWithLocation $ "Specified decimal range " ++ show (pmin,pmax) ++ " invalid"
       when (ndecimals < pmin || ndecimals > pmax) $
         failWithLocation $ "Number of decimals (" ++ show ndecimals ++ ") not "
                            ++ "within specified range " ++ show (pmin,pmax)
