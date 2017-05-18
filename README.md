@@ -16,7 +16,7 @@ according to which the testdata is checked.  Two sample scripts
 
 [Checktestdata language specification](doc/format-spec.md)
 
-We also have a [Haskell implementation](haskell_edsl/README.md) of the
+We also have a [Haskell implementation](haskell_edsl/) of the
 checktestdata program, which supports this specification as well as a
 Haskell embedded domain-specific language.
 
