@@ -258,7 +258,7 @@ string s = PrimOp $ do
 -- | Match with the given regular expression
 regex :: String -> CTD String
 regex rs = PrimOp $ do
-  let reg = compile defaultCompOpt defaultExecOpt $ BS.pack rs
+  let reg = compile blankCompOpt defaultExecOpt $ BS.pack rs
   case reg of
     Left e  -> failWithLocation e
     Right r -> do
