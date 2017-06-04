@@ -1,5 +1,7 @@
 module Checktestdata.Options (
   FloatOption (..),
+  Options (..),
+  defaultOptions
   ) where
 
 --------------------------------------------------------------------------------
@@ -13,3 +15,17 @@ data FloatOption
   | Scientific
   | Fixed
   deriving (Show)
+
+-- | The options the user can set via the commandline or programatically.
+data Options = Options {
+  -- | When set to 'True', whitespace changes are accepted, including heading
+  --   and training whitespace, but not newlines. Be careful: extra whitespace
+  --   matches greedily!
+  whitespace_ok :: Bool
+  }
+
+-- | The default values for 'Options'
+defaultOptions :: Options
+defaultOptions = Options {
+  whitespace_ok = False
+  }

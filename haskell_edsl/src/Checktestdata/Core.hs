@@ -4,6 +4,7 @@ module Checktestdata.Core (
   -- * Core representation
   CTD,
   runCTD,
+  getOptions,
 
   -- * Primitives
   peekChar,
@@ -17,11 +18,15 @@ module Checktestdata.Core (
   regex,
   eof,
   isEOF,
+  greedyWhitespace,
+
+  -- * Helpers
+  isSpaceNoNewline
   ) where
 
-import Checktestdata.Options ( FloatOption (..) )
+import Checktestdata.Options ( FloatOption (..), Options (..) )
 
-import Data.Char             ( isDigit, toUpper )
+import Data.Char             ( isDigit, toUpper, isSpace )
 import Data.Maybe            ( fromMaybe, isJust )
 import Data.ByteString.Char8 ( ByteString )
 import qualified Data.ByteString.Char8          as BS
@@ -40,6 +45,8 @@ import Control.Monad.Trans.Either
 
 -- | Fields in the internal state
 data InternalState = InternalState {
+  -- | The options that were set
+  options :: Options,
   -- | The full input
   full_input :: ByteString,
   -- | The remaining part of the input
@@ -78,15 +85,21 @@ instance Monad CTD where
 -- | Run a checktestdata script on the given input and return either
 --   an error or the result of the script. The 'eof' combinator is appended
 --   to this script to ensure that the full input is consumed.
-runCTD :: CTD a -> ByteString -> Either String a
-runCTD sc inp = flip evalState initst $ runEitherT $ f $ sc <* eof where
+runCTD :: Options -> CTD a -> ByteString -> Either String a
+runCTD opts sc inp = flip evalState initst $ runEitherT $ f $ pr where
+  pr | whitespace_ok opts = greedyWhitespace *> sc <* greedyWhitespace <* eof
+     | otherwise          = sc <* eof
   initst :: InternalState
-  initst = InternalState inp inp 0
+  initst = InternalState opts inp inp 0
   f :: CTD a -> InternalMonad a
   f (Pure a)    = return a
   f (Apply a b) = f a <*> f b
   f (Bind a b)  = f a >>= f . b
   f (PrimOp g)  = g
+
+-- | Get the options that were set
+getOptions :: CTD Options
+getOptions = PrimOp $ get >>= return . options
 
 --------------------------------------------------------------------------------
 -- Error handling
@@ -302,3 +315,13 @@ getRemaining = do
   -- Update last_start, which we use for error messages
   put $ st { last_start = BS.length $ remaining st }
   return $ remaining st
+
+-- | Helper, check that the character is a space but not a newline
+isSpaceNoNewline :: Char -> Bool
+isSpaceNoNewline c = isSpace c && c /= '\n'
+
+-- | Greedily match all whitespace except newline characters
+greedyWhitespace :: CTD ()
+greedyWhitespace = PrimOp $ do
+  cs <- getRemaining
+  putRemaining $ BS.dropWhile isSpaceNoNewline cs
