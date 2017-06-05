@@ -21,11 +21,17 @@ data Options = Options {
   -- | When set to 'True', whitespace changes are accepted, including heading
   --   and training whitespace, but not newlines. Be careful: extra whitespace
   --   matches greedily!
-  whitespace_ok :: Bool
+  whitespace_ok :: Bool,
+  -- | When set to 'True', print no output.
+  quiet         :: Bool,
+  -- | Path to the input, or 'Nothing' for reading from stdin
+  input_file    :: Maybe FilePath
   }
 
 -- | The default values for 'Options'
 defaultOptions :: Options
 defaultOptions = Options {
-  whitespace_ok = False
+  whitespace_ok = False,
+  quiet         = False,
+  input_file    = Nothing
   }

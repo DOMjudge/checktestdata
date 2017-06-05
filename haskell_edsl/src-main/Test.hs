@@ -85,8 +85,11 @@ checkRun :: Options -> FilePath -> FilePath -> IO (Either String ())
 checkRun opts prog dataf = do
   res <- try $ do
     ctd <- parseScript $ testsdir ++ prog
-    runCTDFile opts (interpret ctd) $ testsdir ++ dataf
+    let sopts = opts {
+          input_file = Just $ testsdir ++ dataf,
+          quiet = True
+          }
+    ctdMainOpts sopts (interpret ctd)
   case res of
     Left e -> return $ Left $ show (e :: SomeException)
-    Right (Left e) -> return $ Left e
-    Right (Right _) -> return $ Right ()
+    Right () -> return $ Right ()

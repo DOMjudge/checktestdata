@@ -5,7 +5,10 @@ module Checktestdata (
 
   -- * Main functionality
   ctdMain,
-  runCTDFile,
+  ctdMainOpts,
+
+  -- * Commandline parsers
+  generalOpts,
 
   -- * Primitives
   peekChar,
@@ -31,38 +34,58 @@ import Checktestdata.Core
 import Checktestdata.Derived
 import Checktestdata.Options
 
-import System.Environment ( getArgs, getProgName )
-import System.Exit        ( exitFailure, exitSuccess)
+import System.Exit        ( exitFailure )
 import System.IO          ( hPutStrLn, stderr)
 
-import qualified Data.ByteString.Char8 as BS
+import Control.Monad      ( when )
 
--- | Run a checktestdata script on a file
-runCTDFile :: Options -> CTD a -> FilePath -> IO (Either String a)
-runCTDFile opts sc fp = do
-  f <- BS.readFile fp
-  return $ runCTD opts sc f
+import Options.Applicative
+import Data.Semigroup ((<>))
+
+import qualified Data.ByteString.Char8 as BS
 
 -- | Main function that reads the commandline arguments
 --   and takes either a filename or reads from stdin.
 ctdMain :: CTD a -> IO ()
 ctdMain sc = do
-  args <- getArgs
-  -- todo: add -w options to commandline arguments
-  bs <- case args of
-    []    -> BS.getContents
-    ["-"] -> BS.getContents
-    [fp]  -> BS.readFile fp
-    _     -> do
-      nm <- getProgName
-      putStrLn $ "Usage:"
-      putStrLn $ "  " ++ nm ++ " data.in"
-      putStrLn $ "  " ++ nm ++ " < data.in"
-      exitFailure
-  case runCTD defaultOptions sc bs of
+  opts <- execParser $ info (generalOpts <**> helper)
+    ( fullDesc
+      <> progDesc "Check the data for testdata.in"
+      <> header "checktestdata" )
+  ctdMainOpts opts sc
+
+-- | Main function that reads the input file given in the options.
+ctdMainOpts :: Options -> CTD a -> IO ()
+ctdMainOpts opts sc = do
+  bs <- case input_file opts of
+    Nothing  -> BS.getContents
+    Just "-" -> BS.getContents
+    Just fp  -> BS.readFile fp
+  case runCTD opts sc bs of
     Left err -> do
-      hPutStrLn stderr err
+      when (not $ quiet opts) $
+        hPutStrLn stderr err
       exitFailure
     Right _ -> do
-      putStrLn "Testdata OK"
-      exitSuccess
+      when (not $ quiet opts) $
+        putStrLn "Testdata OK"
+
+
+--------------------------------------------------------------------------------
+-- Command line option parsing
+--------------------------------------------------------------------------------
+
+-- | Parser for the general commandline options.
+generalOpts :: Parser Options
+generalOpts = Options
+  <$> switch
+  ( long "whitespace-ok"
+    <> short 'w'
+    <> help "whitespace changes are accepted, including heading and trailing whitespace, but not newlines; be careful: extra whitespace matches greedily!" )
+  <*> switch
+  ( long "quiet"
+    <> short 'q'
+    <> help "don't display testdata error messages: test exitcode" )
+  <*> optional (argument str (metavar "testdata.in"))
+
+  
