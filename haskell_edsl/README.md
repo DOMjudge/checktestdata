@@ -40,3 +40,15 @@ The tests can be run with:
 ```
 cabal test
 ```
+
+## Building the examples and other checker programs
+
+Install the library globally on your system with:
+```
+cabal install
+```
+
+Then a checker program can be build with:
+```
+ghc --make ProgramName.hs
+```
