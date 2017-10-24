@@ -14,7 +14,7 @@ module Checktestdata.Derived (
   unique ) where
 
 import Checktestdata.Core
-import Checktestdata.Options ( FloatOption (..) )
+import Checktestdata.Options ( FloatOption (..), Options (..) )
 
 import Control.Monad      ( when )
 import qualified Data.Set as Set
@@ -73,16 +73,22 @@ showF x = show (fromRat x :: Double)
 -- | Check that the next character is a space.
 space :: CTD ()
 space = do
+  opts <- getOptions
   c <- nextChar
-  when (c /= ' ') $
+  when (c /= ' ' && (not (whitespace_ok opts && isSpaceNoNewline c))) $
     fail $ "Space expected"
+  when (whitespace_ok opts) $ greedyWhitespace
 
 -- | Check that the next character is a newline.
 newline :: CTD ()
 newline = do
+  opts <- getOptions
+  when (whitespace_ok opts) $ greedyWhitespace
   c <- nextChar
   when (c /= '\n') $
     fail $ "Newline expected"
+  when (whitespace_ok opts) $ greedyWhitespace
+
 
 -- | Match any of the given characters
 match :: String -> CTD Bool

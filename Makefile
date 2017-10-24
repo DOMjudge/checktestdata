@@ -44,10 +44,11 @@ parse.cc parserbase.h: checktestdata.y parser.h parser.ih parsetype.hpp
 	$(call INSERT_VERSION,BISONCPP_VERSION,$(shell bisonc++ --version))
 endif
 
-checksucc = ./checktestdata $$opts $$prog $$data >/dev/null 2>&1 || \
-		{ echo "Running './checktestdata $$opts $$prog $$data' did not succeed..." ; exit 1; }
-checkfail = ./checktestdata $$opts $$prog $$data >/dev/null 2>&1 && \
-		{ echo "Running './checktestdata $$opts $$prog $$data' did not fail..."    ; exit 1; }
+checkcmd = ./checktestdata $$opts $$prog $$data
+checksucc = $(checkcmd) >/dev/null 2>&1 || \
+		{ echo "Running '$(checkcmd)' did not succeed..." ; exit 1; }
+checkfail = $(checkcmd) >/dev/null 2>&1 && \
+		{ echo "Running '$(checkcmd)' did not fail..."    ; exit 1; }
 
 config.mk: config.mk.in
 	$(error run ./bootstrap and/or configure to create config.mk)
