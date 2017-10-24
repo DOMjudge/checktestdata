@@ -20,7 +20,7 @@ We also have a [Haskell implementation](haskell_edsl/) of the
 checktestdata program, which supports this specification as well as a
 Haskell embedded domain-specific language.
 
-## Installation
+## Installation and use
 
 
 Requirements:
@@ -53,6 +53,20 @@ make
 
 Leave out the `make dist` step if you use the pre-generated scanner/parser
 files on the release branch.
+
+Finally, you can run
+```
+make check
+```
+to run a number of tests. Note that a few of the tests are
+non-deterministic and may sometimes return an error. This is ok, but the
+`make check` command should run successfully more than 90% of the time.
+
+For usage instructions run:
+```
+checktestdata --help
+```
+
 
 ## Library
 
