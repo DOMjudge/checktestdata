@@ -29,6 +29,7 @@ Requirements:
    (GNU g++ >= 4.9 and LLVM clang++ >= 3.5 are known to work)
  * Libboost (http://www.boost.org/)
  * The GNU GMP libraries (http://gmplib.org/)
+ * Automake (https://www.gnu.org/software/automake/)
  * flexc++/bisonc++ (optional)
 
 If you don't have `flexc++` and/or `bisonc++` available, you may use the release
@@ -37,11 +38,11 @@ branch where we've pre-generated the scanner/parser files.
 Command line for installing the build dependencies on Debian or
 Ubuntu, when using the release branch:
 ```
-apt-get install make g++ libboost-dev libgmp-dev
+apt-get install make g++ libboost-dev libgmp-dev autotools-dev automake
 ```
 For Redhat-like distributions try:
 ```
-yum install make g++ boost-devel gmp-devel
+yum install make g++ boost-devel gmp-devel automake
 ```
 
 To compile checktestdata, run:
