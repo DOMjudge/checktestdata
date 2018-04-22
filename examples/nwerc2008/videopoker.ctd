@@ -1,0 +1,9 @@
+INT(1,100,runs) NEWLINE
+REP(runs)
+  REP(9,SPACE) INT(0,1000) END NEWLINE
+  INT(1,10,n) NEWLINE
+  REP(n)
+    REPI(i,5,SPACE) REGEX("(2|3|4|5|6|7|8|9|T|J|Q|K|A)(c|d|h|s)",c[i]) END NEWLINE
+    ASSERT(UNIQUE(c))
+  END
+END

@@ -1,0 +1,12 @@
+INT(1,100,runs) NEWLINE
+REP(runs)
+  INT(1,50,n) NEWLINE
+  REP(n) 
+    INT(1,500) SPACE 
+    INT(1,500) SPACE 
+    INT(1,500) SPACE 
+    INT(1,500) SPACE
+    INT(1,500) SPACE 
+    INT(1,500) NEWLINE
+  END
+END

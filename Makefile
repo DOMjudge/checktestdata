@@ -46,9 +46,9 @@ endif
 
 checkcmd = ./checktestdata $$opts $$prog $$data
 checksucc = $(checkcmd) >/dev/null 2>&1 || \
-		{ echo "Running '$(checkcmd)' did not succeed..." ; exit 1; }
+		{ echo "Running '$(checkcmd)'$${try:+ attempt $$try} did not succeed..." ; exit 1; }
 checkfail = $(checkcmd) >/dev/null 2>&1 && \
-		{ echo "Running '$(checkcmd)' did not fail..."    ; exit 1; }
+		{ echo "Running '$(checkcmd)'$${try:+ attempt $$try} did not fail..."    ; exit 1; }
 
 config.mk: config.mk.in
 	$(error run ./bootstrap and/or configure to create config.mk)
@@ -98,7 +98,7 @@ check: checktestdata
 		grep 'IGNORE GENERATE TESTING' $$i >/dev/null && continue ; \
 		n=$${i#tests/testprog} ; n=$${n%.in} ; \
 		prog=$$i ; \
-		for i in seq 10 ; do opts=-g ; $(checksucc) ; opts='' ; $(checksucc) ; done ; \
+		for try in `seq 10` ; do opts=-g ; $(checksucc) ; opts='' ; $(checksucc) ; done ; \
 	done ; \
 	rm -f $$TMP
 

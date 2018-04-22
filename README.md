@@ -8,9 +8,11 @@ Checktestdata is a tool to verify the syntactical integrity of test cases in
 programming contests like the ACM ICPC.
 
 It allows you to specify a simple grammar for your testdata input files,
-according to which the testdata is checked.  Two sample scripts
-`hello.ctd` and `fltcmp.ctd` are provided for
-[DOMjudge](https://www.domjudge.org/) sample problems *hello* and *fltcmp*.
+according to which the testdata is checked. In [the examples directory](examples)
+you find two sample scripts `hello.ctd` and `fltcmp.ctd` from the
+[DOMjudge](https://www.domjudge.org/) sample problems *hello* and
+*fltcmp*, and under [examples/nwerc2008](examples/nwerc2008) the
+scripts used for the [NWERC 2008 problemset](http://2008.nwerc.eu/contest/problemset).
 
 ## Grammar specification
 
@@ -29,6 +31,7 @@ Requirements:
    (GNU g++ >= 4.9 and LLVM clang++ >= 3.5 are known to work)
  * Libboost (http://www.boost.org/)
  * The GNU GMP libraries (http://gmplib.org/)
+ * Automake (https://www.gnu.org/software/automake/)
  * flexc++/bisonc++ (optional)
 
 If you don't have `flexc++` and/or `bisonc++` available, you may use the release
@@ -37,11 +40,11 @@ branch where we've pre-generated the scanner/parser files.
 Command line for installing the build dependencies on Debian or
 Ubuntu, when using the release branch:
 ```
-apt-get install make g++ libboost-dev libgmp-dev
+apt-get install make g++ libboost-dev libgmp-dev autotools-dev automake
 ```
 For Redhat-like distributions try:
 ```
-yum install make g++ boost-devel gmp-devel
+yum install make g++ boost-devel gmp-devel automake
 ```
 
 To compile checktestdata, run:
@@ -93,7 +96,7 @@ anything.
 
 ## Copyright & Licencing
 
-Checktestdata is Copyright &copy; 2008 - 2017 by the checktestdata developers and
+Checktestdata is Copyright &copy; 2008 - 2018 by the checktestdata developers and
 all respective contributors. The current checktestdata developers are Jeroen
 Bransen, Jaap Eldering, Jan Kuipers, and Tobias Werth; see the git commits for
 a complete list of contributors.

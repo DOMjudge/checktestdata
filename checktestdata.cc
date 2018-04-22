@@ -44,7 +44,7 @@ void version()
 {
         printf("%s -- version %s, written by %s\n\n",PROGRAM,VERSION,AUTHORS);
         printf(
-"Copyright (c) 2008 - 2017 by the checktestdata developers and all\n"
+"Copyright (c) 2008 - 2018 by the checktestdata developers and all\n"
 "respective contributors. All rights reserved.\n"
 "%s comes with ABSOLUTELY NO WARRANTY and is provided \"as is\".\n"
 "You are free to modify and redistribute this program under the conditions\n"
@@ -136,14 +136,26 @@ int main(int argc, char **argv)
 		exit(exit_failure);
 	}
 
+	// Check for testdata file
+	fstream fdata;
+	if ( argc>optind+1 ) {
+		char *datafile = argv[optind+1];
+		ios_base::openmode mode = generate ? ios_base::out|ios_base::trunc : ios_base::in;
+		fdata.open(datafile, mode);
+		if ( fdata.fail() ) {
+			cerr << "Error opening '" << datafile << "'.\n";
+			exit(exit_failure);
+		}
+	}
+	iostream& data = fdata.is_open() ? static_cast<iostream&>(fdata)
+	                                 : (generate ? static_cast<iostream&>(cout)
+	                                             : static_cast<iostream&>(cin) );
+
 	// Set options for checksyntax
 	int options=0;
 	if (whitespace_ok) options |= opt_whitespace_ok;
 	if (debugging    ) options |= opt_debugging;
 	if (quiet        ) options |= opt_quiet;
-
-	// Check for testdata file and check syntax
-	bool testdata_ok = 0;
 
 	init_checktestdata(prog, options);
 
@@ -153,35 +165,15 @@ int main(int argc, char **argv)
 		exit(exit_failure);
 	}
 
-	if ( argc<=optind+1 ) {
-		if ( generate ) {
-			gentestdata(cout);
-		} else {
-			testdata_ok = checksyntax(cin);
-		}
+	bool testdata_ok = false;
+	if ( generate ) {
+		gentestdata(data);
 	} else {
-		if ( generate ) {
-			char *datafile = argv[optind+1];
-			ofstream fout(datafile);
-			if ( fout.fail() ) {
-				cerr << "Error opening '" << datafile << "'.\n";
-				exit(exit_failure);
-			}
-			gentestdata(fout);
-			fout.close();
-		} else {
-			char *datafile = argv[optind+1];
-			ifstream fin(datafile);
-			if ( fin.fail() ) {
-				cerr << "Error opening '" << datafile << "'.\n";
-				exit(exit_failure);
-			}
-			testdata_ok = checksyntax(fin);
-			fin.close();
-		}
+		testdata_ok = checksyntax(data);
 	}
 
 	prog.close();
+	if ( fdata.is_open() ) fdata.close();
 
 	if ( !generate ) {
 		if ( !testdata_ok ) {

@@ -1,0 +1,4 @@
+INT(1,100,runs) NEWLINE
+REP(runs)
+  REGEX("[][,0-9]+") NEWLINE
+END
