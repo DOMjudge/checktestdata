@@ -4,6 +4,8 @@
    It's licensed under the 2-clause BSD license, see the file COPYING.
  */
 
+#define _XOPEN_SOURCE 700
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -19,7 +21,7 @@
 #include <cstdarg>
 #include <climits>
 #include <getopt.h>
-#include <sys/time.h>
+#include <time.h>
 #include <cstdlib>
 #include <boost/variant.hpp>
 #include <boost/exception_ptr.hpp>
@@ -1293,11 +1295,10 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 	}
 
 	// Initialize random generators
-	struct timeval time;
-	unsigned long seed;
-	gettimeofday(&time,NULL);
-	seed = (time.tv_sec * 1000) + (time.tv_usec % 1000);
-	srandom(seed);
+	struct timespec time;
+	clock_gettime(CLOCK_REALTIME,&time);
+	mpz_class seed = 1000000000 * mpz_class(time.tv_sec) + time.tv_nsec;
+	srandom(seed.get_ui());
 	gmp_rnd.seed(seed);
 
 	// Initialize current position in program and data.
