@@ -8,9 +8,11 @@ Checktestdata is a tool to verify the syntactical integrity of test cases in
 programming contests like the ACM ICPC.
 
 It allows you to specify a simple grammar for your testdata input files,
-according to which the testdata is checked.  Two sample scripts
-`hello.ctd` and `fltcmp.ctd` are provided for
-[DOMjudge](https://www.domjudge.org/) sample problems *hello* and *fltcmp*.
+according to which the testdata is checked. In [the examples directory](examples)
+you find two sample scripts `hello.ctd` and `fltcmp.ctd` from the
+[DOMjudge](https://www.domjudge.org/) sample problems *hello* and
+*fltcmp*, and under [examples/nwerc2008](examples/nwerc2008) the
+scripts used for the [NWERC 2008 problemset](http://2008.nwerc.eu/contest/problemset).
 
 ## Grammar specification
 

@@ -1,0 +1,7 @@
+INT(1,100,runs) NEWLINE
+REP(runs)
+  INT(1,20000,n) SPACE INT(0,50000,m) NEWLINE
+  REP(m)
+    INT(1,n,a) SPACE INT(1,n,b) ASSERT(a!=b) NEWLINE
+  END
+END

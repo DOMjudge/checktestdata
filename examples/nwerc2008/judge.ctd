@@ -1,0 +1,4 @@
+INT(1,100,runs) NEWLINE
+REP(runs)
+  INT(0,10000) NEWLINE
+END
