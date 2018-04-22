@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	if ( argc>optind+1 ) {
 		char *datafile = argv[optind+1];
 		ios_base::openmode mode = generate ? ios_base::out|ios_base::trunc : ios_base::in;
-		fdata = fstream(datafile, mode);
+		fdata.open(datafile, mode);
 		if ( fdata.fail() ) {
 			cerr << "Error opening '" << datafile << "'.\n";
 			exit(exit_failure);
