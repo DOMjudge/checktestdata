@@ -78,6 +78,8 @@ struct parse_t {
 	  ~      uninitialized object, to detect unset default arguments
 	*/
 
+	mutable checktestdata::value_t cache;
+
 	parse_t(): val(), args(), op('~') {}
 	parse_t(args_t _args): val(), args(_args), op(' ') {}
 	parse_t(val_t _val, args_t _args): val(_val), args(_args), op(' ') {}

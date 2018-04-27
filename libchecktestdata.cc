@@ -261,20 +261,24 @@ void unsetvars(const args_t& varlist)
 value_t value(const expr& x)
 {
 	debug("value '%s'",x.val.c_str());
+	if ( x.cache.val.which()!=value_none ) {
+		debug("eval cached");
+		return x.cache;
+	}
 
-	if ( x.op=='S' ) return value_t(x.val);
+	if ( x.op=='S' ) return x.cache = value_t(x.val);
 	if ( isalpha(x.val[0]) ) return getvar(x);
 
 	mpz_class intval;
 	mpf_class fltval;
-	if ( intval.set_str(x.val,0)==0 ) return value_t(intval);
+	if ( intval.set_str(x.val,0)==0 ) return x.cache = value_t(intval);
 	else if ( fltval.set_str(x.val,0)==0 ) {
 		// Set sufficient precision:
 		if ( fltval.get_prec()<4*x.val.length() ) {
 			fltval.set_prec(4*x.val.length());
 			fltval.set_str(x.val,0);
 		}
-		return value_t(fltval);
+		return x.cache = value_t(fltval);
 	}
 	return value_t();
 }
@@ -418,27 +422,60 @@ value_t evalfun(args_t funargs)
 	exit(exit_failure);
 }
 
-value_t eval(const expr& e)
+bool cachable(const expr& e)
 {
-	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
 	switch ( e.op ) {
 	case 'I':
 	case 'F':
 	case 'S':
-	case 'v': return value(e);
-	case 'n': return -eval(e.args[0]);
-	case '+': return eval(e.args[0]) + eval(e.args[1]);
-	case '-': return eval(e.args[0]) - eval(e.args[1]);
-	case '*': return eval(e.args[0]) * eval(e.args[1]);
-	case '/': return eval(e.args[0]) / eval(e.args[1]);
-	case '%': return eval(e.args[0]) % eval(e.args[1]);
-	case '^': return pow(eval(e.args[0]),eval(e.args[1]));
-	case 'f': return evalfun(e.args);
+		return true;
+
+	case '+':
+	case '-':
+	case '*':
+	case '%':
+	case '/':
+	case '^':
+	case 'n':
+	case '?':
+	case '|':
+	case '&':
+	case '!':
+	case 'f':
+		for(size_t i=0; i<e.nargs(); i++) if ( !cachable(e.args[i]) ) return false;
+		return true;
+	}
+	return false;
+}
+
+value_t eval(const expr& e)
+{
+	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
+	if ( e.cache.val.which()!=value_none ) {
+		debug("eval cached");
+		return e.cache;
+	}
+	value_t res;
+	switch ( e.op ) {
+	case 'I':
+	case 'F':
+	case 'S':
+	case 'v': res = value(e); break;
+	case 'n': res = -eval(e.args[0]); break;
+	case '+': res = eval(e.args[0]) + eval(e.args[1]); break;
+	case '-': res = eval(e.args[0]) - eval(e.args[1]); break;
+	case '*': res = eval(e.args[0]) * eval(e.args[1]); break;
+	case '/': res = eval(e.args[0]) / eval(e.args[1]); break;
+	case '%': res = eval(e.args[0]) % eval(e.args[1]); break;
+	case '^': res = pow(eval(e.args[0]),eval(e.args[1])); break;
+	case 'f': res = evalfun(e.args); break;
 	default:
 		cerr << "unknown arithmetic operator '" << e.op << "' in "
 		     << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	if ( cachable(e) ) e.cache = res;
+	return res;
 }
 
 bool compare(const expr& cmp)
@@ -1090,7 +1127,8 @@ void checktestdata(ostream &datastream)
 	datastream << setprecision(float_precision);
 
 	while ( true ) {
-		command cmd = currcmd = program[prognr];
+		const command &cmd = program[prognr];
+		currcmd = cmd;
 
 		if ( cmd.name()=="EOF" ) {
 			if ( gendata ) {
