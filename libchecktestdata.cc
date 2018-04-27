@@ -35,50 +35,9 @@ using namespace std;
 
 namespace checktestdata {
 
-struct none_t {};
-ostream& operator<<(ostream& os, const none_t&) {
-	return os << "<no value>";
-}
-
-struct value_t {
-	boost::variant<none_t, mpz_class, mpf_class, string> val;
-
-	value_t(): val(none_t()) {}
-	explicit value_t(mpz_class x): val(x) {}
-	explicit value_t(mpf_class x): val(x) {}
-	explicit value_t(string x): val(x) {}
-
-	operator mpz_class() const;
-	operator mpf_class() const;
-
-	// This is a member function instead of a casting operator, since
-	// otherwise the string could be used in other implicit casts.
-	string getstr() const;
-
-	// This converts any value type to a string representation.
-	string tostr() const;
-};
-
-const int value_none   = 0;
-const int value_int    = 1;
-const int value_float  = 2;
-const int value_string = 3;
-
 class doesnt_match_exception {};
 class eof_found_exception {};
 class generate_exception {};
-
-ostream& operator <<(ostream &os, const value_t &val)
-{
-	return os << val.val;
-}
-
-string value_t::tostr() const
-{
-	stringstream ss;
-	ss << *this;
-	return ss.str();
-}
 
 const int display_before_error = 65;
 const int display_after_error  = 50;
@@ -230,24 +189,6 @@ long string2int(string s)
 	}
 
 	return res;
-}
-
-value_t::operator mpz_class() const
-{
-	return boost::get<mpz_class>(val);
-}
-
-value_t::operator mpf_class() const
-{
-	if(const mpz_class* p = boost::get<mpz_class>(&val))
-		return *p;
-	return boost::get<mpf_class>(val);
-}
-
-string value_t::getstr() const
-{
-	if ( val.which()!=value_string ) error("value is not a string");
-	return boost::get<string>(val);
 }
 
 value_t eval(const expr&); // forward declaration

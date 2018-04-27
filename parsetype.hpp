@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
+#include <boost/variant.hpp>
+#include <gmpxx.h>
 
 struct parse_t;
 
@@ -13,6 +16,38 @@ typedef std::vector<parse_t> args_t;
 typedef parse_t command;
 typedef parse_t expr;
 typedef parse_t test;
+
+namespace checktestdata {
+
+struct none_t {};
+
+std::ostream& operator<<(std::ostream&, const none_t&);
+
+struct value_t {
+	boost::variant<none_t, mpz_class, mpf_class, std::string> val;
+
+	value_t(): val(none_t()) {}
+	explicit value_t(mpz_class x): val(x) {}
+	explicit value_t(mpf_class x): val(x) {}
+	explicit value_t(std::string x): val(x) {}
+
+	operator mpz_class() const;
+	operator mpf_class() const;
+
+	// This is a member function instead of a casting operator, since
+	// otherwise the string could be used in other implicit casts.
+	std::string getstr() const;
+
+	// This converts any value type to a string representation.
+	std::string tostr() const;
+};
+
+const int value_none   = 0;
+const int value_int    = 1;
+const int value_float  = 2;
+const int value_string = 3;
+
+} // namespace checktestdata
 
 std::ostream &operator<<(std::ostream &, const parse_t &);
 
