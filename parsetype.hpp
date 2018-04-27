@@ -130,9 +130,10 @@ struct parse_t {
 
 	const val_t& name()  const { return val; }
 	size_t       nargs() const { return args.size(); }
+	const char*  c_str() const { return val.c_str(); }
 
 	operator std::string() { return val; }
-	const char *c_str() { return val.c_str(); }
+	operator const std::string() const { return val; }
 };
 
 #endif /* PARSETYPE_HPP */

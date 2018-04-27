@@ -250,9 +250,9 @@ string value_t::getstr() const
 	return boost::get<string>(val);
 }
 
-value_t eval(expr); // forward declaration
+value_t eval(const expr&); // forward declaration
 
-value_t getvar(expr var, int use_preset = 0)
+value_t getvar(const expr& var, int use_preset = 0)
 {
 	// Construct index array. The cast to mpz_class automatically
 	// verifies that the index value is of type mpz_class.
@@ -277,7 +277,7 @@ value_t getvar(expr var, int use_preset = 0)
 	exit(exit_failure);
 }
 
-void setvar(expr var, value_t val, int use_preset = 0)
+void setvar(const expr& var, value_t val, int use_preset = 0)
 {
 	// Construct index array. The cast to mpz_class automatically
 	// verifies that the index value is of type mpz_class.
@@ -302,14 +302,14 @@ void setvar(expr var, value_t val, int use_preset = 0)
 	(*revlist)[var][val].insert(ind);
 }
 
-void setvars(vector<parse_t> varlist, int use_preset = 0)
+void setvars(const vector<parse_t>& varlist, int use_preset = 0)
 {
 	for(size_t i=0; i<varlist.size(); i++) {
 		setvar(varlist[i].args[0],eval(varlist[i].args[1]),use_preset);
 	}
 }
 
-void unsetvars(args_t varlist)
+void unsetvars(const args_t& varlist)
 {
 	for(size_t i=0; i<varlist.size(); i++) {
 		variable.erase(varlist[i].val);
@@ -317,7 +317,7 @@ void unsetvars(args_t varlist)
 	}
 }
 
-value_t value(expr x)
+value_t value(const expr& x)
 {
 	debug("value '%s'",x.val.c_str());
 
@@ -477,7 +477,7 @@ value_t evalfun(args_t funargs)
 	exit(exit_failure);
 }
 
-value_t eval(expr e)
+value_t eval(const expr& e)
 {
 	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
 	switch ( e.op ) {
@@ -500,7 +500,7 @@ value_t eval(expr e)
 	}
 }
 
-bool compare(expr cmp)
+bool compare(const expr& cmp)
 {
 	string op = cmp.val;
 	value_t l = eval(cmp.args[0]);
@@ -518,7 +518,7 @@ bool compare(expr cmp)
 	exit(exit_failure);
 }
 
-bool unique(args_t varlist)
+bool unique(const args_t& varlist)
 {
 	debug("unique, #args=%d",(int)varlist.size());
 
@@ -585,7 +585,7 @@ bool unique(args_t varlist)
 	return true;
 }
 
-bool inarray(expr e, expr array)
+bool inarray(const expr& e, const expr& array)
 {
 	string var = array.val;
 	value_t val = eval(e);
@@ -601,7 +601,7 @@ bool inarray(expr e, expr array)
 	return rev_variable[var].count(val) && rev_variable[var][val].size()>0;
 }
 
-bool dotest(test t)
+bool dotest(const test& t)
 {
 	debug("test op='%c', #args=%d",t.op,(int)t.args.size());
 	switch ( t.op ) {
@@ -836,7 +836,7 @@ string genregex(string exp)
 }
 
 // Parse {min,max}decimals in FLOATP command.
-void getdecrange(command cmd, int *decrange)
+void getdecrange(const command& cmd, int *decrange)
 {
 	// Read {min,max}decimals range for float.
 	for(int i=0; i<2; i++) {
@@ -960,7 +960,7 @@ void gentoken(command cmd, ostream &datastream)
 	}
 }
 
-void checktoken(command cmd)
+void checktoken(const command& cmd)
 {
 	currcmd = cmd;
 	debug("checking token %s at %lu,%lu",
@@ -986,7 +986,9 @@ void checktoken(command cmd)
 		mpz_class hi = eval(cmd.args[1]);
 
 //		debug("%s <= %s <= %s",lo.get_str().c_str(),num.c_str(),hi.get_str().c_str());
-		if ( cmd.nargs()>=3 ) debug("'%s' = '%s'",cmd.args[2].c_str(),num.c_str());
+		if ( cmd.nargs()>=3 ) debug("'%s' = '%s'",
+		                            const_cast<char *>(cmd.args[2].c_str()),
+		                            const_cast<char *>(num.c_str()));
 
 		if ( num.size()==0 ) error();
 		if ( num.size()>=2 && num[0]=='0' ) error("prefix zero(s)");
