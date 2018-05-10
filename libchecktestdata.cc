@@ -1041,7 +1041,7 @@ void checktoken(const command& cmd)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string str = eval(cmd.args[0]).getstr();
-		regex regexstr(str,regex::extended);
+		regex regexstr(str,regex::extended|regex::nosubs|regex::optimize);
 		smatch res;
 		string matchstr;
 
