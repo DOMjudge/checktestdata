@@ -55,7 +55,7 @@ config.mk: config.mk.in
 
 libchecktestdata.o: config.mk
 libchecktestdata.o: $(PARSER_GEN)
-libchecktestdata.o: %.o: %.cc %.hpp parser.h
+libchecktestdata.o: %.o: %.cc %.hpp databuffer.hpp parser.h
 
 checktestdata: CPPFLAGS += $(BOOST_CPPFLAGS)
 checktestdata: LDFLAGS  += $(BOOST_LDFLAGS) $(STATIC_LINK_START) $(LIBGMPXX) $(STATIC_LINK_END)
@@ -106,7 +106,7 @@ coverage:
 	$(MAKE) clean
 	$(MAKE) CXXFLAGS='$(COVERAGE_CXXFLAGS)'
 	$(MAKE) check
-	gcov checktestdata.cc libchecktestdata.cc libchecktestdata.hpp
+	gcov checktestdata.cc libchecktestdata.cc libchecktestdata.hpp databuffer.hpp
 
 coverage-clean:
 	rm -f *.gcda *.gcno *.gcov coverage*.html
