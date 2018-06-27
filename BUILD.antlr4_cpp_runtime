@@ -1,0 +1,12 @@
+cc_library(
+    name = "runtime",
+    srcs = glob(["runtime/src/**/*.cpp"]),
+    hdrs = glob(["runtime/src/**/*.h"]),
+    includes = [
+        "runtime/src",
+        "runtime/src/atn",
+        "runtime/src/support",
+        "runtime/src/tree",
+    ],
+	visibility = ["//visibility:public"],
+)

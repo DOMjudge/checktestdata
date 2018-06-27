@@ -17,3 +17,5 @@ cov-int/
 *.gcda
 *.gcno
 coverage*.html
+/bazel-*
+*.swp

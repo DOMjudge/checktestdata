@@ -1,0 +1,14 @@
+cc_library(
+  name = "btree",
+  hdrs = [
+    "btree.h",
+	"btree_container.h"
+  ],
+)
+
+cc_library(
+  name = "btree_map",
+  hdrs = ["btree_map.h"],
+  deps = [":btree"],
+  visibility = ["//visibility:public"],
+)
