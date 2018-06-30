@@ -34,7 +34,7 @@ class Value {
                          result_t<T, U>>;
 
   template <typename T>
-  static Value returnInt(const T& x) {
+  static Value returnInt(T x) {
     if (std::numeric_limits<int64_t>::min() <= x &&
         x <= std::numeric_limits<int64_t>::max()) {
       return Value{(int64_t)x};
@@ -44,7 +44,8 @@ class Value {
       integer result = (result_upper << 64) + result_lower;
       return Value{result};
     } else {
-      return Value{(integer)x};
+      static_assert(std::is_same_v<T, integer>);
+      return Value{std::move(x)};
     }
   }
   template <typename T, typename U>
@@ -54,8 +55,9 @@ class Value {
         throw std::invalid_argument("value not suitable for pow");
       }
       integer result = pow((integer)(a), (unsigned)b);
-      return returnInt(result);
+      return returnInt(std::move(result));
     } else {
+      static_assert(std::is_same_v<T, double>);
       return Value{pow(a, (double)b)};
     }
   }
@@ -119,12 +121,11 @@ class Value {
                                      std::to_string(op)};
             }
             if constexpr (is_integral<i_t>) {
-              return returnInt(result);
+              return returnInt(std::move(result));
             } else {
               return Value{result};
             }
           }
-          return Value{};
         },
         value_, o.value_);
   }
@@ -148,7 +149,7 @@ class Value {
           }
           throw std::invalid_argument(
               absl::StrCat("Value (", typeid(U).name(), ")", str(),
-                           " not suitable for loop counter"));
+                           " not suitable for ", typeid(T).name()));
         },
         value_);
   }
@@ -171,11 +172,12 @@ class Value {
                             "insufficient long double precision");
               return (long double)a < (long double)b;
             } else if constexpr (std::is_same_v<T, double>) {
+              static_assert(std::is_same_v<U, integer>);
               return (boost::multiprecision::mpq_rational)a < b;
-            } else if constexpr (std::is_same_v<U, double>) {
-              return a < (boost::multiprecision::mpq_rational)b;
             } else {
-              throw std::logic_error("programmer error");
+              static_assert(std::is_same_v<U, double>);
+              static_assert(std::is_same_v<T, integer>);
+              return a < (boost::multiprecision::mpq_rational)b;
             }
           }
         },
