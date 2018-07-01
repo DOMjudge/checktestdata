@@ -16,4 +16,4 @@ before_install:
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
 script:
-  - bazel build checktestdata
+  - bazel test test

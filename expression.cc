@@ -38,11 +38,13 @@ Value parseString(const std::string& literal) {
       i += 1;
       char c2 = literal[i];
       if (c2 >= '0' && c2 <= '9') {
-        i++;
-        char c3 = literal[i];
-        i++;
-        char c4 = literal[i];
-        result += static_cast<char>(c4 + 8 * (c3 + 8 * c2));
+        for (; i < (int)literal.size() - 1 && literal[i] >= '0' &&
+               literal[i] <= '9';
+             ++i) {
+          c2 *= 8;
+          c2 += literal[i];
+        }
+        result += c2;
       } else {
         switch (c2) {
           case '\\':

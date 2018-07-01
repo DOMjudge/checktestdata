@@ -139,13 +139,13 @@ class Reader : public Command {
         read_ = &Reader::readFloat;
         break;
       case checktestdataParser::STRING:
+        string_ = std::move(*value);
+        read_ = &Reader::readString;
         break;
-      case checktestdataParser::REGEX: {
-        const auto& str = std::get<Value::string>(value->eval().value_);
-        regex_.emplace(str);
+      case checktestdataParser::REGEX:
+        string_ = std::move(*value);
         read_ = &Reader::readRegex;
         break;
-      }
       default:
         throw std::logic_error("unimplemented read statement " +
                                std::to_string(ctx->type->getType()));
@@ -158,8 +158,26 @@ class Reader : public Command {
   }
 
  private:
+  Expression string_;
+  const void* last_string_value_ = nullptr;
   std::optional<RE2> regex_;
+
+  void readString(std::string_view& in) {
+    const auto& s = std::get<Value::string>(string_.eval().value_);
+    if (in.substr(0, s.size()) == s) {
+      in.remove_prefix(s.size());
+    }
+    if (variable_) {
+      variable_->assign(Value{s});
+    }
+  }
+
   void readRegex(std::string_view& in) {
+    const auto& s = std::get<Value::string>(string_.eval().value_);
+    if (&s != last_string_value_) {
+      last_string_value_ = &s;
+      regex_.emplace(s);
+    }
     const char* before = in.data();
     if (!RE2::Consume(&in, *regex_)) {
       throw InputMismatch{absl::StrCat("did not match regex ",
@@ -210,10 +228,12 @@ class Reader : public Command {
     if (peek(in) == '-') get(in);
     bool fail = true;
     int decimals = 0;
+    int digits = 0;
     bool scientific = false;
     while (peek(in) >= '0' && peek(in) <= '9') {
       fail = false;
       get(in);
+      ++digits;
     }
     if (!fail && peek(in) == '.') {
       get(in);
@@ -232,11 +252,17 @@ class Reader : public Command {
         get(in);
       }
     }
-    if ((mindecimals_ &&
-         std::get<int64_t>(mindecimals_->eval().value_) > decimals) ||
-        (maxdecimals_ &&
-         std::get<int64_t>(maxdecimals_->eval().value_) < decimals)) {
-      throw std::logic_error{"wrong number of decimal places in input"};
+    if (mindecimals_) {
+      int64_t mindecimals = mindecimals_->eval().toInt<uint32_t>();
+      int64_t maxdecimals = maxdecimals_->eval().toInt<uint32_t>();
+      if (scientific && (digits != 1 || before[0] == '0')) {
+        throw std::logic_error{
+            "In the FLOATP case a floating point number in scientific notation "
+            "must have exactly one nonzero digit before the decimal point."};
+      }
+      if (mindecimals > decimals || maxdecimals < decimals) {
+        throw std::logic_error{"wrong number of decimal places in input"};
+      }
     }
     if (scientific_ && *scientific_ != scientific) {
       throw std::logic_error{"wrong float format"};
@@ -538,11 +564,13 @@ int main(int argc, char** argv) {
   checktestdataLexer lexer(&input);
   CommonTokenStream tokens(&lexer);
   checktestdataParser parser(&tokens);
-  if (parser.getNumberOfSyntaxErrors()) {
-    throw std::runtime_error{"failed to compile ctd"};
-  }
   tree::ParseTree* tree = parser.main();
-  // std::cout << tree->toStringTree(&parser) << std::endl;
+  if (!lexer.hitEOF || parser.getNumberOfSyntaxErrors()) {
+    throw std::runtime_error{absl::StrCat("failed to compile ctd ",
+                                          lexer.hitEOF, " ",
+                                          parser.getNumberOfSyntaxErrors())};
+  }
+  // std::cerr << tree->toStringTree(&parser) << std::endl;
   std::vector<std::thread> threads;
   for (int i = 2; i == 2 || i < argc; ++i) {
     threads.emplace_back([tree, i, argc, argv]() {

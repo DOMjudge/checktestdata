@@ -92,3 +92,14 @@ cc_library(
     srcs = [],
     hdrs = ["command.h"],
 )
+
+sh_test(
+    name = "test",
+    srcs = ["test.sh"],
+    data = [
+        ":checktestdata",
+    ] + glob([
+        "tests/testprog*",
+        "tests/testdata*",
+    ]),
+)

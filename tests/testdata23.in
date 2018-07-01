@@ -1,2 +1,2 @@
-bar.*
+(?s)bar.*
 barblaboo.*#!?$$^[a-z]
