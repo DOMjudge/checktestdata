@@ -159,7 +159,7 @@ class Reader : public Command {
 
  private:
   Expression string_;
-  const void* last_string_value_ = nullptr;
+  Value::string last_string_value_;
   std::optional<RE2> regex_;
 
   void readString(std::string_view& in) {
@@ -174,8 +174,8 @@ class Reader : public Command {
 
   void readRegex(std::string_view& in) {
     const auto& s = std::get<Value::string>(string_.eval().value_);
-    if (&s != last_string_value_) {
-      last_string_value_ = &s;
+    if (!regex_ || s != last_string_value_) {
+      last_string_value_ = s;
       regex_.emplace(s);
     }
     const char* before = in.data();
