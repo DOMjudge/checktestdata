@@ -48,6 +48,14 @@ command currcmd;
 
 gmp_randclass gmp_rnd(gmp_randinit_default);
 
+// Simple function to get a random integer in the range [0,n-1].
+// Assumes that the gmp_rnd global variable has been initialized.
+unsigned long get_random(unsigned long n)
+{
+	mpz_class x = gmp_rnd.get_z_range(n);
+	return x.get_ui();
+}
+
 databuffer data;
 vector<command> program;
 
@@ -584,16 +592,18 @@ bool dotest(const test& t)
 	case '!': return !dotest(t.args[0]);
 	case '&': return dotest(t.args[0]) && dotest(t.args[1]);
 	case '|': return dotest(t.args[0]) || dotest(t.args[1]);
-	case 'E': if ( gendata ) {
-			  return (random() % 10 < 3);
-		  } else {
-			  return data.eof();
-		  }
-	case 'M': if ( gendata ) {
-			  return (random() % 2 == 0);
-		  } else {
-			  return !data.eof() && t.args[0].val.find(data.next())!=string::npos;
-		  }
+	case 'E':
+		if ( gendata ) {
+			return (get_random(10) < 3);
+		} else {
+			return data.eof();
+		}
+	case 'M':
+		if ( gendata ) {
+			return (get_random(2) == 0);
+		} else {
+			return !data.eof() && t.args[0].val.find(data.next())!=string::npos;
+		}
 	case 'U': return unique(t.args);
 	case 'A': return inarray(t.args[0],t.args[1]);
 	case '?': return compare(t);
@@ -676,7 +686,7 @@ int getmult(string &exp, unsigned int &index)
 		max = 1;
 	}
 
-	return (min + random() % (1 + max - min));
+	return (min + get_random(1 + max - min));
 }
 
 string genregex(string exp)
@@ -700,7 +710,7 @@ string genregex(string exp)
 			{
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += (char) (' ' + (random() % (int) ('~' - ' ')));
+					res += (char) (' ' + get_random((int) ('~' - ' ')));
 				}
 			}
 			break;
@@ -748,7 +758,7 @@ string genregex(string exp)
 				}
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += possibleVec[random() % possibleVec.size()];
+					res += possibleVec[get_random(possibleVec.size())];
 				}
 			}
 			break;
@@ -777,7 +787,7 @@ string genregex(string exp)
 				alternatives.push_back(exp.substr(begin, i - begin));
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += genregex(alternatives[random() % alternatives.size()]);
+					res += genregex(alternatives[get_random(alternatives.size())]);
 				}
 			}
 			break;
@@ -1233,11 +1243,10 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 		for(size_t i=0; i<program.size(); i++) cerr << program[i] << endl;
 	}
 
-	// Initialize random generators
+	// Initialize random generator
 	struct timespec time;
 	clock_gettime(CLOCK_REALTIME,&time);
 	mpz_class seed = 1000000000 * mpz_class(time.tv_sec) + time.tv_nsec;
-	srandom(seed.get_ui());
 	gmp_rnd.seed(seed);
 
 	// Initialize current position in program.
