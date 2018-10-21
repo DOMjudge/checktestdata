@@ -53,3 +53,40 @@ std::ostream &operator<<(std::ostream &out, const parse_t &obj)
 	}
     return out;
 }
+
+namespace checktestdata {
+
+std::ostream& operator<<(std::ostream& os, const none_t&) {
+	return os << "<no value>";
+}
+
+value_t::operator mpz_class() const
+{
+	return boost::get<mpz_class>(val);
+}
+
+value_t::operator mpf_class() const
+{
+	if(const mpz_class* p = boost::get<mpz_class>(&val))
+		return *p;
+	return boost::get<mpf_class>(val);
+}
+
+std::ostream& operator <<(std::ostream &os, const value_t &val)
+{
+	return os << val.val;
+}
+
+std::string value_t::getstr() const
+{
+	return boost::get<std::string>(val);
+}
+
+std::string value_t::tostr() const
+{
+	std::stringstream ss;
+	ss << *this;
+	return ss.str();
+}
+
+} // namespace checktestdata

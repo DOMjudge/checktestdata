@@ -4,6 +4,8 @@
    It's licensed under the 2-clause BSD license, see the file COPYING.
  */
 
+#define _XOPEN_SOURCE 700
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -19,7 +21,7 @@
 #include <cstdarg>
 #include <climits>
 #include <getopt.h>
-#include <sys/time.h>
+#include <time.h>
 #include <cstdlib>
 #include <boost/variant.hpp>
 #include <boost/exception_ptr.hpp>
@@ -28,65 +30,33 @@
 
 #include "parser.h"
 #include "libchecktestdata.hpp"
+#include "databuffer.hpp"
 
 using namespace std;
 
 namespace checktestdata {
 
-struct none_t {};
-ostream& operator<<(ostream& os, const none_t&) {
-	return os << "<no value>";
-}
-
-struct value_t {
-	boost::variant<none_t, mpz_class, mpf_class, string> val;
-
-	value_t(): val(none_t()) {}
-	explicit value_t(mpz_class x): val(x) {}
-	explicit value_t(mpf_class x): val(x) {}
-	explicit value_t(string x): val(x) {}
-
-	operator mpz_class() const;
-	operator mpf_class() const;
-
-	// This is a member function instead of a casting operator, since
-	// otherwise the string could be used in other implicit casts.
-	string getstr() const;
-
-	// This converts any value type to a string representation.
-	string tostr() const;
-};
-
-const int value_none   = 0;
-const int value_int    = 1;
-const int value_float  = 2;
-const int value_string = 3;
-
 class doesnt_match_exception {};
 class eof_found_exception {};
 class generate_exception {};
 
-ostream& operator <<(ostream &os, const value_t &val)
-{
-	return os << val.val;
-}
-
-string value_t::tostr() const
-{
-	stringstream ss;
-	ss << *this;
-	return ss.str();
-}
-
 const int display_before_error = 65;
 const int display_after_error  = 50;
 
-size_t prognr, datanr, linenr, charnr, extra_ws;
+size_t prognr;
 command currcmd;
 
 gmp_randclass gmp_rnd(gmp_randinit_default);
 
-string data;
+// Simple function to get a random integer in the range [0,n-1].
+// Assumes that the gmp_rnd global variable has been initialized.
+unsigned long get_random(unsigned long n)
+{
+	mpz_class x = gmp_rnd.get_z_range(n);
+	return x.get_ui();
+}
+
+databuffer data;
 vector<command> program;
 
 // This stores array-type variables like x[i,j] as string "x" and
@@ -188,7 +158,7 @@ void readtestdata(istream &in)
 		exit(exit_failure);
 	}
 
-	data = ss.str();
+	data = databuffer(ss.str());
 }
 
 void error(string msg = string())
@@ -198,17 +168,14 @@ void error(string msg = string())
 		throw generate_exception();
 	}
 
-	size_t fr = max(0,int(datanr)-display_before_error);
-	size_t to = min(data.size(),datanr+display_after_error);
-
-	debug("error at datanr = %d, %d - %d\n",(int)datanr,(int)fr,(int)to);
+	debug("error at datanr = %d\n",(int)data.pos());
 
 	if ( !quiet ) {
-		cerr << data.substr(fr,datanr-fr) << endl;
-		cerr << string(min(charnr,(size_t)display_before_error),' ') << '^';
-		cerr << data.substr(datanr,to-datanr) << endl << endl;
+		cerr << data.prev(display_before_error) << endl;
+		cerr << string(min(data.lpos(),(size_t)display_before_error),' ') << '^';
+		cerr << data.next(display_after_error) << endl << endl;
 
-		cerr << "ERROR: line " << linenr+1 << " character " << charnr+1;
+		cerr << "ERROR: line " << data.line()+1 << " character " << data.lpos()+1;
 		cerr << " of testdata doesn't match " << currcmd;
 		if ( msg.length()>0 ) cerr << ": " << msg;
 		cerr << endl << endl;
@@ -230,27 +197,9 @@ long string2int(string s)
 	return res;
 }
 
-value_t::operator mpz_class() const
-{
-	return boost::get<mpz_class>(val);
-}
+value_t eval(const expr&); // forward declaration
 
-value_t::operator mpf_class() const
-{
-	if(const mpz_class* p = boost::get<mpz_class>(&val))
-		return *p;
-	return boost::get<mpf_class>(val);
-}
-
-string value_t::getstr() const
-{
-	if ( val.which()!=value_string ) error("value is not a string");
-	return boost::get<string>(val);
-}
-
-value_t eval(expr); // forward declaration
-
-value_t getvar(expr var, int use_preset = 0)
+value_t getvar(const expr& var, int use_preset = 0)
 {
 	// Construct index array. The cast to mpz_class automatically
 	// verifies that the index value is of type mpz_class.
@@ -275,7 +224,7 @@ value_t getvar(expr var, int use_preset = 0)
 	exit(exit_failure);
 }
 
-void setvar(expr var, value_t val, int use_preset = 0)
+void setvar(const expr& var, value_t val, int use_preset = 0)
 {
 	// Construct index array. The cast to mpz_class automatically
 	// verifies that the index value is of type mpz_class.
@@ -300,14 +249,14 @@ void setvar(expr var, value_t val, int use_preset = 0)
 	(*revlist)[var][val].insert(ind);
 }
 
-void setvars(vector<parse_t> varlist, int use_preset = 0)
+void setvars(const vector<parse_t>& varlist, int use_preset = 0)
 {
 	for(size_t i=0; i<varlist.size(); i++) {
 		setvar(varlist[i].args[0],eval(varlist[i].args[1]),use_preset);
 	}
 }
 
-void unsetvars(args_t varlist)
+void unsetvars(const args_t& varlist)
 {
 	for(size_t i=0; i<varlist.size(); i++) {
 		variable.erase(varlist[i].val);
@@ -315,23 +264,27 @@ void unsetvars(args_t varlist)
 	}
 }
 
-value_t value(expr x)
+value_t value(const expr& x)
 {
 	debug("value '%s'",x.val.c_str());
+	if ( x.cache.val.which()!=value_none ) {
+		debug("eval cached");
+		return x.cache;
+	}
 
-	if ( x.op=='S' ) return value_t(x.val);
+	if ( x.op=='S' ) return x.cache = value_t(x.val);
 	if ( isalpha(x.val[0]) ) return getvar(x);
 
 	mpz_class intval;
 	mpf_class fltval;
-	if ( intval.set_str(x.val,0)==0 ) return value_t(intval);
+	if ( intval.set_str(x.val,0)==0 ) return x.cache = value_t(intval);
 	else if ( fltval.set_str(x.val,0)==0 ) {
 		// Set sufficient precision:
 		if ( fltval.get_prec()<4*x.val.length() ) {
 			fltval.set_prec(4*x.val.length());
 			fltval.set_str(x.val,0);
 		}
-		return value_t(fltval);
+		return x.cache = value_t(fltval);
 	}
 	return value_t();
 }
@@ -475,30 +428,63 @@ value_t evalfun(args_t funargs)
 	exit(exit_failure);
 }
 
-value_t eval(expr e)
+bool cachable(const expr& e)
 {
-	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
 	switch ( e.op ) {
 	case 'I':
 	case 'F':
 	case 'S':
-	case 'v': return value(e);
-	case 'n': return -eval(e.args[0]);
-	case '+': return eval(e.args[0]) + eval(e.args[1]);
-	case '-': return eval(e.args[0]) - eval(e.args[1]);
-	case '*': return eval(e.args[0]) * eval(e.args[1]);
-	case '/': return eval(e.args[0]) / eval(e.args[1]);
-	case '%': return eval(e.args[0]) % eval(e.args[1]);
-	case '^': return pow(eval(e.args[0]),eval(e.args[1]));
-	case 'f': return evalfun(e.args);
+		return true;
+
+	case '+':
+	case '-':
+	case '*':
+	case '%':
+	case '/':
+	case '^':
+	case 'n':
+	case '?':
+	case '|':
+	case '&':
+	case '!':
+	case 'f':
+		for(size_t i=0; i<e.nargs(); i++) if ( !cachable(e.args[i]) ) return false;
+		return true;
+	}
+	return false;
+}
+
+value_t eval(const expr& e)
+{
+	debug("eval op='%c', val='%s', #args=%d",e.op,e.val.c_str(),(int)e.args.size());
+	if ( e.cache.val.which()!=value_none ) {
+		debug("eval cached");
+		return e.cache;
+	}
+	value_t res;
+	switch ( e.op ) {
+	case 'I':
+	case 'F':
+	case 'S':
+	case 'v': res = value(e); break;
+	case 'n': res = -eval(e.args[0]); break;
+	case '+': res = eval(e.args[0]) + eval(e.args[1]); break;
+	case '-': res = eval(e.args[0]) - eval(e.args[1]); break;
+	case '*': res = eval(e.args[0]) * eval(e.args[1]); break;
+	case '/': res = eval(e.args[0]) / eval(e.args[1]); break;
+	case '%': res = eval(e.args[0]) % eval(e.args[1]); break;
+	case '^': res = pow(eval(e.args[0]),eval(e.args[1])); break;
+	case 'f': res = evalfun(e.args); break;
 	default:
 		cerr << "unknown arithmetic operator '" << e.op << "' in "
 		     << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	if ( cachable(e) ) e.cache = res;
+	return res;
 }
 
-bool compare(expr cmp)
+bool compare(const expr& cmp)
 {
 	string op = cmp.val;
 	value_t l = eval(cmp.args[0]);
@@ -516,7 +502,7 @@ bool compare(expr cmp)
 	exit(exit_failure);
 }
 
-bool unique(args_t varlist)
+bool unique(const args_t& varlist)
 {
 	debug("unique, #args=%d",(int)varlist.size());
 
@@ -583,7 +569,7 @@ bool unique(args_t varlist)
 	return true;
 }
 
-bool inarray(expr e, expr array)
+bool inarray(const expr& e, const expr& array)
 {
 	string var = array.val;
 	value_t val = eval(e);
@@ -599,23 +585,25 @@ bool inarray(expr e, expr array)
 	return rev_variable[var].count(val) && rev_variable[var][val].size()>0;
 }
 
-bool dotest(test t)
+bool dotest(const test& t)
 {
 	debug("test op='%c', #args=%d",t.op,(int)t.args.size());
 	switch ( t.op ) {
 	case '!': return !dotest(t.args[0]);
 	case '&': return dotest(t.args[0]) && dotest(t.args[1]);
 	case '|': return dotest(t.args[0]) || dotest(t.args[1]);
-	case 'E': if ( gendata ) {
-			  return (random() % 10 < 3);
-		  } else {
-			  return datanr>=data.size();
-		  }
-	case 'M': if ( gendata ) {
-			  return (random() % 2 == 0);
-		  } else {
-			  return datanr<data.size() && t.args[0].val.find(data[datanr])!=string::npos;
-		  }
+	case 'E':
+		if ( gendata ) {
+			return (get_random(10) < 3);
+		} else {
+			return data.eof();
+		}
+	case 'M':
+		if ( gendata ) {
+			return (get_random(2) == 0);
+		} else {
+			return !data.eof() && t.args[0].val.find(data.next())!=string::npos;
+		}
 	case 'U': return unique(t.args);
 	case 'A': return inarray(t.args[0],t.args[1]);
 	case '?': return compare(t);
@@ -625,46 +613,30 @@ bool dotest(test t)
 	}
 }
 
-int isspace_notnewline(char c) { return isspace(c) && c!='\n'; }
-
-void readwhitespace()
-{
-	while ( datanr<data.size() && isspace_notnewline(data[datanr]) ) {
-		datanr++;
-		charnr++;
-		extra_ws++;
-	}
-}
-
 void checkspace()
 {
-	if ( datanr>=data.size() ) error("end of file");
+	if ( data.eof() ) error("end of file");
 
 	if ( whitespace_ok ) {
 		// First check at least one space-like character
-		if ( !isspace_notnewline(data[datanr++]) ) error();
-		charnr++;
+		if ( !isspace_notnewline(data.readchar()) ) error();
 		// Then greedily read non-newline whitespace
-		readwhitespace();
+		data.readwhitespace();
 	} else {
-		if ( data[datanr++]!=' ' ) error();
-		charnr++;
+		if ( data.readchar()!=' ' ) error();
 	}
 }
 
 void checknewline()
 {
 	// Trailing whitespace before newline
-	if ( whitespace_ok ) readwhitespace();
+	if ( whitespace_ok ) data.readwhitespace();
 
-	if ( datanr>=data.size() ) error("end of file");
-	if ( data[datanr++]!='\n' ) error();
-	linenr++;
-	charnr=0;
+	if ( data.eof() ) error("end of file");
+	if ( data.readchar()!='\n' ) error();
 
 	// Leading whitespace after newline
-	if ( whitespace_ok ) readwhitespace();
-
+	if ( whitespace_ok ) data.readwhitespace();
 }
 
 #define MAX_MULT 10
@@ -714,7 +686,7 @@ int getmult(string &exp, unsigned int &index)
 		max = 1;
 	}
 
-	return (min + random() % (1 + max - min));
+	return (min + get_random(1 + max - min));
 }
 
 string genregex(string exp)
@@ -738,7 +710,7 @@ string genregex(string exp)
 			{
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += (char) (' ' + (random() % (int) ('~' - ' ')));
+					res += (char) (' ' + get_random((int) ('~' - ' ')));
 				}
 			}
 			break;
@@ -786,7 +758,7 @@ string genregex(string exp)
 				}
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += possibleVec[random() % possibleVec.size()];
+					res += possibleVec[get_random(possibleVec.size())];
 				}
 			}
 			break;
@@ -815,7 +787,7 @@ string genregex(string exp)
 				alternatives.push_back(exp.substr(begin, i - begin));
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += genregex(alternatives[random() % alternatives.size()]);
+					res += genregex(alternatives[get_random(alternatives.size())]);
 				}
 			}
 			break;
@@ -834,7 +806,7 @@ string genregex(string exp)
 }
 
 // Parse {min,max}decimals in FLOATP command.
-void getdecrange(command cmd, int *decrange)
+void getdecrange(const command& cmd, int *decrange)
 {
 	// Read {min,max}decimals range for float.
 	for(int i=0; i<2; i++) {
@@ -854,8 +826,7 @@ void getdecrange(command cmd, int *decrange)
 void gentoken(command cmd, ostream &datastream)
 {
 	currcmd = cmd;
-	debug("generating token %s at %lu,%lu",
-	      cmd.name().c_str(),(unsigned long)linenr,(unsigned long)charnr);
+	debug("generating token %s", cmd.name().c_str());
 
 	if ( cmd.name()=="SPACE" ) datastream << ' ';
 
@@ -958,11 +929,11 @@ void gentoken(command cmd, ostream &datastream)
 	}
 }
 
-void checktoken(command cmd)
+void checktoken(const command& cmd)
 {
 	currcmd = cmd;
 	debug("checking token %s at %lu,%lu",
-	      cmd.name().c_str(),(unsigned long)linenr,(unsigned long)charnr);
+	      cmd.name().c_str(),data.line(),data.lpos());
 
 	if ( cmd.name()=="SPACE" ) checkspace();
 
@@ -972,19 +943,17 @@ void checktoken(command cmd)
 		// Accepts format (0|-?[1-9][0-9]*), i.e. no leading zero's
 		// and no '-0' accepted.
 		string num;
-		size_t len = 0;
-		while ( datanr<data.size() &&
-		        (isdigit(data[datanr+len]) ||
-		         (num.size()==0 && data[datanr+len]=='-')) ) {
-			num += data[datanr+len];
-			len++;
+		while ( isdigit(data.peek()) || (num.empty() && data.peek()=='-') ) {
+			num += data.readchar();
 		}
 
 		mpz_class lo = eval(cmd.args[0]);
 		mpz_class hi = eval(cmd.args[1]);
 
 //		debug("%s <= %s <= %s",lo.get_str().c_str(),num.c_str(),hi.get_str().c_str());
-		if ( cmd.nargs()>=3 ) debug("'%s' = '%s'",cmd.args[2].c_str(),num.c_str());
+		if ( cmd.nargs()>=3 ) debug("'%s' = '%s'",
+		                            const_cast<char *>(cmd.args[2].c_str()),
+		                            const_cast<char *>(num.c_str()));
 
 		if ( num.size()==0 ) error();
 		if ( num.size()>=2 && num[0]=='0' ) error("prefix zero(s)");
@@ -995,9 +964,6 @@ void checktoken(command cmd)
 
 		if ( x<lo || x>hi ) error("value out of range");
 		if ( cmd.nargs()>=3 ) setvar(cmd.args[2],value_t(x));
-
-		datanr += len;
-		charnr += len;
 	}
 
 	else if ( cmd.name()=="FLOAT" || cmd.name()=="FLOATP" ) {
@@ -1023,45 +989,33 @@ void checktoken(command cmd)
 			}
 		}
 
-		size_t start = datanr;
+		size_t start = data.pos();
 		// Match optional minus sign:
-		if ( datanr<data.size() && data[datanr]=='-' ) { datanr++; charnr++; }
+		if ( data.peek()=='-' ) data.readchar();
 		// Match base with optional decimal dot:
-		if ( datanr>=data.size() || !isdigit(data[datanr]) ) error("digit expected");
-		size_t digitpos = datanr, dotpos = string::npos;
-		while ( datanr<data.size() &&
-		        (isdigit(data[datanr]) ||
-		         (dotpos==string::npos && digitpos!=datanr && data[datanr]=='.')) ) {
-			if ( data[datanr]=='.' ) dotpos = datanr;
-			datanr++;
-			charnr++;
+		if ( !isdigit(data.peek()) ) error("digit expected");
+		size_t digitpos = data.pos(), dotpos = string::npos;
+		char first_digit = data.peek();
+		while ( (isdigit(data.peek()) ||
+		         (dotpos==string::npos && digitpos!=data.pos() && data.peek()=='.')) ) {
+			if ( data.readchar()=='.' ) dotpos = data.pos()-1;
 		}
 		// Check that any dot is followed by digit:
-		if ( !isdigit(data[datanr-1]) ) error("digit expected");
+		if ( !isdigit(data.peek(-1)) ) error("digit expected");
 
-		size_t exppos = datanr;
+		size_t exppos = data.pos();
 		bool has_exp = false;
 		// Match exponent:
-		if ( opt==1 || (opt==0 && datanr<data.size() && toupper(data[datanr])=='E') ) {
-			if ( datanr>=data.size() || toupper(data[datanr])!='E' ) {
-				error("exponent 'E' expected");
-			}
+		if ( opt==1 || (opt==0 && toupper(data.peek())=='E') ) {
+			if ( toupper(data.readchar())!='E' ) error("exponent 'E' expected");
 			has_exp = true;
-			datanr++;
-			charnr++;
-			if ( datanr<data.size() && (data[datanr]=='-' || data[datanr]=='+') ) {
-				datanr++;
-				charnr++;
-			}
-			while ( datanr<data.size() && isdigit(data[datanr]) ) {
-				datanr++;
-				charnr++;
-			}
-			if ( !isdigit(data[datanr-1]) ) error("digit expected");
+			if ( data.peek()=='-' || data.peek()=='+' ) data.readchar();
+			while ( isdigit(data.peek()) ) data.readchar();
+			if ( !isdigit(data.peek(-1)) ) error("digit expected");
 		}
 
 		if ( cmd.name()=="FLOATP" ) {
-			if ( has_exp && (data[digitpos]=='0' || dotpos!=digitpos+1) ) {
+			if ( has_exp && (first_digit=='0' || dotpos!=digitpos+1) ) {
 				error("exactly one non-zero before the decimal dot expected");
 			}
 			int ndecimals = (dotpos==string::npos ? 0 : exppos - dotpos - 1);
@@ -1072,7 +1026,7 @@ void checktoken(command cmd)
 			}
 		}
 
-		string matchstr = data.substr(start,datanr-start);
+		string matchstr = data.prev(data.pos()-start);
 
 		debug("parsing float '%s', exponent = %d",matchstr.c_str(),has_exp);
 
@@ -1088,10 +1042,8 @@ void checktoken(command cmd)
 	else if ( cmd.name()=="STRING" ) {
 		string str = eval(cmd.args[0]).getstr();
 		for (size_t i=0; i<str.size(); i++) {
-			if ( datanr>=data.size() ) error("premature end of file");
-			if ( data[datanr++]!=str[i] ) error();
-			charnr++;
-			if ( str[i]=='\n' ) linenr++, charnr=0;
+			if ( data.eof() ) error("premature end of file");
+			if ( data.readchar()!=str[i] ) error();
 		}
 
 		debug("'%s' = '%s'",str.c_str(),cmd.args[0].c_str());
@@ -1099,20 +1051,18 @@ void checktoken(command cmd)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string str = eval(cmd.args[0]).getstr();
-		regex regexstr(str,regex::extended);
-		match_results<string::const_iterator> res;
+		regex regexstr(str,regex::extended|regex::nosubs|regex::optimize);
+		smatch res;
 		string matchstr;
 
-		if ( !regex_search(data.cbegin()+datanr,data.cend(),
-		                   res,regexstr,regex_constants::match_continuous) ) {
+		string searchstr = data.next(data.size());
+		if ( !regex_search(searchstr,res,regexstr,regex_constants::match_continuous) ) {
 			error();
 		} else {
-			size_t matchend = size_t(res[0].second-data.begin());
-			matchstr = string(data.begin()+datanr,data.begin()+matchend);
-			for (; datanr<matchend; datanr++) {
-				charnr++;
-				if ( data[datanr]=='\n' ) linenr++, charnr=0;
-			}
+			size_t match_len = res[0].second - res[0].first;
+			size_t match_end = data.pos() + match_len;
+			matchstr = data.next(match_len);
+			while ( data.pos()<match_end ) data.readchar();
 		}
 		debug("'%s' = '%s'",matchstr.c_str(),str.c_str());
 
@@ -1145,7 +1095,8 @@ void checktestdata(ostream &datastream)
 	datastream << setprecision(float_precision);
 
 	while ( true ) {
-		command cmd = currcmd = program[prognr];
+		const command &cmd = program[prognr];
+		currcmd = cmd;
 
 		if ( cmd.name()=="EOF" ) {
 			if ( gendata ) {
@@ -1153,7 +1104,7 @@ void checktestdata(ostream &datastream)
 				return;
 			} else {
 				debug("checking EOF");
-				if ( datanr++!=data.size() ) error();
+				if ( !data.eof() ) error();
 				throw eof_found_exception();
 			}
 		}
@@ -1292,18 +1243,14 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 		for(size_t i=0; i<program.size(); i++) cerr << program[i] << endl;
 	}
 
-	// Initialize random generators
-	struct timeval time;
-	unsigned long seed;
-	gettimeofday(&time,NULL);
-	seed = (time.tv_sec * 1000) + (time.tv_usec % 1000);
-	srandom(seed);
+	// Initialize random generator
+	struct timespec time;
+	clock_gettime(CLOCK_REALTIME,&time);
+	mpz_class seed = 1000000000 * mpz_class(time.tv_sec) + time.tv_nsec;
 	gmp_rnd.seed(seed);
 
-	// Initialize current position in program and data.
-	linenr = charnr = 0;
-	datanr = prognr = 0;
-	extra_ws = 0;
+	// Initialize current position in program.
+	prognr = 0;
 }
 
 bool gentestdata(ostream &datastream)
@@ -1329,7 +1276,7 @@ bool checksyntax(istream &datastream)
 
 	// If we ignore whitespace, skip leading whitespace on first line
 	// as a special case; other lines are handled by checknewline().
-	if ( whitespace_ok ) readwhitespace();
+	if ( whitespace_ok ) data.readwhitespace();
 
 	try {
 		checktestdata(dummy);
