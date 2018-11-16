@@ -399,28 +399,11 @@ class Listener : public checktestdataBaseListener {
     } else if (ctx->function()) {
       switch (ctx->function()->getStart()->getType()) {
         case checktestdataParser::ISEOF: {
-          Value v;
-          expr_stack_.emplace_back([this, v]() mutable {
-            v = Value{input_->empty()};
-            return std::make_pair(false, &v);
-          });
+          expr_stack_.emplace_back(&input_);
           break;
         }
         case checktestdataParser::MATCH: {
-          Value v;
-          Expression clazz = pop_expr();
-          expr_stack_.emplace_back([this, v, clazz]() mutable {
-            const auto& s = std::get<Value::string>(clazz.eval().value_);
-            v = Value{false};
-            for (char c : s) {
-              if (peek(*input_) == c) {
-                v = Value{true};
-                break;
-              }
-            }
-            return std::make_pair(false, &v);
-          });
-
+          expr_stack_.emplace_back(&input_, pop_expr());
           break;
         }
         default: {

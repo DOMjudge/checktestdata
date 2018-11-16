@@ -5,6 +5,8 @@
 #include <exception>
 #include <mutex>
 
+#include "stream.h"
+
 #include "absl/strings/str_cat.h"
 
 namespace {
@@ -86,6 +88,8 @@ Value parseToken(const antlr4::Token* literal) {
 }
 }  // namespace
 
+Expression::Expression() = default;
+
 Expression::Expression(Value v)
     : value_(std::move(v)), eval_(&Expression::constEval) {}
 
@@ -131,6 +135,7 @@ Expression::Expression(const antlr4::Token* unop, Expression e) {
   }
 }
 
+// UNIQUE, STRLEN, INARRAY functions
 Expression::Expression(const antlr4::Token* function,
                        std::vector<Expression> arguments) {
   switch (function->getType()) {
@@ -152,6 +157,43 @@ Expression::Expression(const antlr4::Token* function,
     default:
       throw std::logic_error{"unimplemented function " + function->getText()};
   }
+}
+
+// ISEOF function
+Expression::Expression(std::string_view** input)
+    : eval_(&Expression::iseofEval), input_(input) {}
+
+// MATCH function
+Expression::Expression(std::string_view** input, Expression match)
+    : eval_(&Expression::matchEval), children_({match}), input_(input) {}
+
+template <Expression::EvalFn inner>
+std::pair<bool, const Value*> Expression::foldConst() {
+  auto result = (this->*inner)();
+  if (result.first) {
+    *this = Expression{*result.second};
+  } else {
+    eval_ = inner;
+  }
+  return callEval();
+}
+
+std::pair<bool, const Value*> Expression::iseofEval() {
+  value_ = Value{(**input_).empty()};
+  return {false, &value_};
+}
+
+std::pair<bool, const Value*> Expression::matchEval() {
+  Value::string clazz = std::get<Value::string>(children_[0].eval().value_);
+  bool found = false;
+  for (char c : clazz) {
+    if (peek(**input_) == c) {
+      found = true;
+      break;
+    }
+  }
+  value_ = Value{found};
+  return {false, &value_};
 }
 
 std::pair<bool, const Value*> Expression::strlenEval() {

@@ -58,6 +58,7 @@ cc_library(
     hdrs = ["expression.h"],
     deps = [
         ":parser",
+        ":stream",
         ":value",
         ":variable",
         "@com_google_absl//absl/strings",

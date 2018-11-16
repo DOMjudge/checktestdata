@@ -13,18 +13,18 @@ class Expression {
  public:
   const Value& eval() { return *callEval().second; }
   void assign(const Value& v) { (this->*assign_)(v); }
-  Expression() {}
+  Expression();
   Expression(Value v);
   Expression(Variable* variable, std::vector<Expression> idx);
   Expression(const antlr4::Token* literal);
   Expression(const antlr4::Token* binop, Expression a, Expression b);
   Expression(const antlr4::Token* unop, Expression e);
+  // UNIQUE, STRLEN, INARRAY functions
   Expression(const antlr4::Token* function, std::vector<Expression> arguments);
-  template <typename F,
-            typename _ = std::enable_if_t<std::is_invocable_v<F>, void>>
-  Expression(F f)
-      : eval_(&Expression::foldConst<&Expression::backdoorEval<F>>),
-        context_(std::move(f)) {}
+  // ISEOF function
+  Expression(std::string_view** input);
+  // MATCH function
+  Expression(std::string_view** input, Expression match);
 
  private:
   auto idx() {
@@ -36,15 +36,7 @@ class Expression {
   std::pair<bool, const Value*> constEval();
   using EvalFn = decltype(&Expression::constEval);
   template <EvalFn inner>
-  std::pair<bool, const Value*> foldConst() {
-    auto result = (this->*inner)();
-    if (result.first) {
-      *this = Expression{std::move(*result.second)};
-    } else {
-      eval_ = inner;
-    }
-    return callEval();
-  }
+  std::pair<bool, const Value*> foldConst();
   template <int op>
   std::pair<bool, const Value*> binopEval();
   std::pair<bool, const Value*> unaryMinusEval();
@@ -56,10 +48,8 @@ class Expression {
   std::pair<bool, const Value*> uniqueEval();
   std::pair<bool, const Value*> inarrayEval();
   std::pair<bool, const Value*> strlenEval();
-  template <typename F>
-  std::pair<bool, const Value*> backdoorEval() {
-    return (*std::any_cast<F>(&context_))();
-  }
+  std::pair<bool, const Value*> iseofEval();
+  std::pair<bool, const Value*> matchEval();
   template <size_t size>
   void variableArrayAssignment(const Value& value) {
     variable_->set<size>(idx(), value);
@@ -76,10 +66,10 @@ class Expression {
   AssignFn getVariableAssignment(size_t i);
 
   Value value_;
-  Variable* variable_;
+  Variable* variable_ = nullptr;
   std::vector<const Variable*> variables_;
   EvalFn eval_ = &Expression::invalid;
   AssignFn assign_ = &Expression::invalidAssignment;
   std::vector<Expression> children_;
-  std::any context_;
+  std::string_view** input_ = nullptr;
 };
