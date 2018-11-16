@@ -37,6 +37,7 @@ cc_binary(
     deps = [
         ":command",
         ":expression",
+        ":loop",
         ":parser",
         ":stream",
         ":value",
@@ -91,6 +92,16 @@ cc_library(
     name = "command",
     srcs = [],
     hdrs = ["command.h"],
+)
+
+cc_library(
+    name = "loop",
+    srcs = ["loop.cc"],
+    hdrs = ["loop.h"],
+    deps = [
+        ":command",
+        ":expression",
+    ],
 )
 
 sh_test(

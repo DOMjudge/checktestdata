@@ -3,7 +3,7 @@ IFS=$'\n'
 progs=$(find tests/ | grep testprog | sort -V)
 for prog in $progs
 do
-  for data in $(ls "$(echo $prog | sed -e 's/testprog\([0-9]*\)\..*/testdata\1/')".*)
+  for data in $(ls "$(echo $prog | sed -e 's/testprog\([^.]*\)\..*/testdata\1/')".*)
   do
     echo checktestdata $prog $data
     ./checktestdata $prog $data

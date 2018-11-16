@@ -12,6 +12,7 @@
 
 #include "command.h"
 #include "expression.h"
+#include "loop.h"
 #include "stream.h"
 #include "variable.h"
 
@@ -63,56 +64,6 @@ class SimpleCommand : public Command {
 
 class SuccessCommand : public Command {
   void run(std::string_view&) {}
-};
-
-class Loop : public Command {
- public:
-  Command* after_ = nullptr;
-  Command* separator_ = nullptr;
-  std::optional<Expression> i_;
-
- protected:
-  void set_i(int64_t i) {
-    if (i_) i_->assign(Value{i});
-  }
-};
-
-class WhileLoop : public Loop {
-  virtual void run(std::string_view& in) override {
-    if (next_) {
-      for (int64_t i = 0; std::get<bool>(condition_.eval().value_); ++i) {
-        set_i(i);
-        if (i)
-          separator_->run(in);
-        else
-          next_->run(in);
-      }
-    }
-    after_->run(in);
-  }
-
- public:
-  Expression condition_;
-};
-
-class ForLoop : public Loop {
-  virtual void run(std::string_view& in) override {
-    if (next_) {
-      Value v = count_.eval();
-      int64_t count = v.toInt<uint32_t>();
-      for (int64_t i = 0; i < count; ++i) {
-        set_i(i);
-        if (i)
-          separator_->run(in);
-        else
-          next_->run(in);
-      }
-    }
-    after_->run(in);
-  }
-
- public:
-  Expression count_;
 };
 
 class Reader : public Command {
