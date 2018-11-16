@@ -82,6 +82,22 @@ class Value {
             else if constexpr (op == checktestdataParser::OR)
               return Value{a || b};
           }
+          if constexpr (std::is_same_v<T, string> &&
+                        std::is_same_v<U, string>) {
+            if constexpr (op == checktestdataParser::EQ) {
+              return Value{a == b};
+            } else if constexpr (op == checktestdataParser::NE) {
+              return Value{a != b};
+            } else if constexpr (op == checktestdataParser::LE) {
+              return Value{a <= b};
+            } else if constexpr (op == checktestdataParser::LT) {
+              return Value{a < b};
+            } else if constexpr (op == checktestdataParser::GE) {
+              return Value{a >= b};
+            } else if constexpr (op == checktestdataParser::GT) {
+              return Value{a > b};
+            }
+          }
           if constexpr (!is_numeric<T> || !is_numeric<U>) {
             throw std::invalid_argument("invalid operands");
           } else {
