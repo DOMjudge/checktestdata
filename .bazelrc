@@ -1,1 +1,7 @@
-import %workspace%/tools/bazel.rc
+build -c opt 
+# build -c dbg
+build --copt='-std=c++1z' 
+# build --copt='-g'
+build --copt='-fno-stack-protector'
+# build -c opt --copt='-fsanitize=address,undefined' --linkopt='-fsanitize=address,undefined'
+# build -c opt --copt='-fsanitize=thread' --linkopt='-fsanitize=thread'
