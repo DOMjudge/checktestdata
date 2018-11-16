@@ -2,7 +2,7 @@ grammar checktestdata;
 
 COMMENT : '#' (~'\n')*'\n' -> skip;
 STRING_LITERAL : '"' CHAR* '"';
-fragment CHAR : ~["\\] | ESCAPED_CHAR;
+fragment CHAR : ESCAPED_CHAR | ~["];
 fragment ESCAPED_CHAR :
 	'\\"' 
 	| '\\\\' 
