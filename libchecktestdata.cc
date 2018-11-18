@@ -602,7 +602,7 @@ bool dotest(const test& t)
 		if ( gendata ) {
 			return (get_random(2) == 0);
 		} else {
-			return !data.eof() && t.args[0].val.find(data.next())!=string::npos;
+			return !data.eof() && t.args[0].val.find(data.peek())!=string::npos;
 		}
 	case 'U': return unique(t.args);
 	case 'A': return inarray(t.args[0],t.args[1]);
@@ -1010,8 +1010,9 @@ void checktoken(const command& cmd)
 			if ( toupper(data.readchar())!='E' ) error("exponent 'E' expected");
 			has_exp = true;
 			if ( data.peek()=='-' || data.peek()=='+' ) data.readchar();
-			while ( isdigit(data.peek()) ) data.readchar();
-			if ( !isdigit(data.peek(-1)) ) error("digit expected");
+			char c = '!';
+			while ( isdigit(data.peek()) ) c = data.readchar();
+			if ( !isdigit(c) ) error("digit expected");
 		}
 
 		if ( cmd.name()=="FLOATP" ) {
@@ -1055,8 +1056,8 @@ void checktoken(const command& cmd)
 		smatch res;
 		string matchstr;
 
-		string searchstr = data.next(data.size());
-		if ( !regex_search(searchstr,res,regexstr,regex_constants::match_continuous) ) {
+		if ( !regex_search(data.curr(),data.end(),res,regexstr,
+		                   regex_constants::match_continuous) ) {
 			error();
 		} else {
 			size_t match_len = res[0].second - res[0].first;

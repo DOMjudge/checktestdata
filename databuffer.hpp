@@ -30,6 +30,10 @@ public:
 	size_t line() const { return _line; }
 	size_t lpos() const { return _lpos; }
 
+	std::string::const_iterator curr()  const { return data.cbegin()+_pos; }
+	std::string::const_iterator begin() const { return data.cbegin(); }
+	std::string::const_iterator end()   const { return data.cend(); }
+
 	std::string next(size_t length=1) const
 	{
 		size_t end = std::min(size(),_pos+length);
