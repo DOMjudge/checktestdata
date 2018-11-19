@@ -153,7 +153,8 @@ The following commands are available:
     times and optionally match 'separator' command (count-1) times in
     between. The value of count must fit in an unsigned 32 bit int.
     The second command 'REPI' does the same, but also stores the
-    current iteration (counting from zero) in the variable 'i'.</dd>
+    current iteration (counting from zero) in the variable 'i'. At the
+    end of the loop, 'i' contains the number of iterations.</dd>
 
 <dt><tt>WHILE(&lt;test&gt; condition [,&lt;command&gt; separator]) [&lt;command&gt;...] END</tt></dt>
 <dt><tt>WHILEI(&lt;variable&gt; i, &lt;test&gt; condition [,&lt;command&gt; separator]) [&lt;command&gt;...] END</tt></dt>
@@ -161,7 +162,8 @@ The following commands are available:
 <dd>Repeat the commands as long as 'condition' is true. Optionally
     match 'separator' command between two consecutive iterations.
     The second command 'WHILEI' does the same, but also stores the
-    current iteration (counting from zero) in the variable 'i'.</dd>
+    current iteration (counting from zero) in the variable 'i'. At the
+    end of the loop, 'i' contains the number of iterations.</dd>
 
 <dt><tt>IF(&lt;test&gt; cond) [&lt;command&gt; cmds1...] [ELSE [&lt;command&gt; cmds2...]] END</tt></dt>
 

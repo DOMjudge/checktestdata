@@ -1,0 +1,10 @@
+# IGNORE GENERATE TESTING
+# Read exactly 2 bits (space-separated)
+WHILEI(i,!MATCH("\n"), SPACE)
+  INT(0,1)
+END
+ASSERT(i==2)
+NEWLINE
+# Test an empty loop
+REPI(j,0) END
+ASSERT(j==0)
