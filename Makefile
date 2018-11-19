@@ -33,7 +33,7 @@ build: $(TARGETS) $(SUBST_FILES)
 # These are build during dist stage, and this is independent of
 # whether checktestdata is enabled after configure.
 ifeq ($(PARSERGEN_ENABLED),yes)
-$(PARSER_GEN): config.mk
+$(PARSER_GEN): | config.mk
 
 lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
 	flexc++ $<
@@ -136,5 +136,10 @@ clean:
 distclean: clean coverage-clean
 	-rm -f $(PARSER_GEN)
 
-.PHONY: build dist check clean distclean coverage coverage-clean coverage-report \
+maintainer-clean: distclean
+	-rm -rf autom4te.cache
+	-rm -f config.mk config.status configure
+
+.PHONY: build dist check clean distclean maintainer-clean \
+        coverage coverage-clean coverage-report \
         coverity-conf coverity-build
