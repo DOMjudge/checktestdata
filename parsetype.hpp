@@ -150,7 +150,7 @@ struct parse_t {
 			break;
 
 		case '?': // comparison operator as arg1
-			val = arg1;
+			val = arg1.val;
 			args.push_back(arg2);
 			args.push_back(arg3);
 			break;
@@ -169,8 +169,7 @@ struct parse_t {
 	size_t       nargs() const { return args.size(); }
 	const char*  c_str() const { return val.c_str(); }
 
-	operator std::string() { return val; }
-	operator const std::string() const { return val; }
+	operator const std::string& () const { return val; }
 };
 
 #endif /* PARSETYPE_HPP */
