@@ -1,0 +1,1 @@
+INT(0, 10, n) SPACE FLOATP(0, 10, 1, 5, x) NEWLINE
