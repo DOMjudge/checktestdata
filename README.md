@@ -96,7 +96,7 @@ anything.
 
 ## Copyright & Licencing
 
-Checktestdata is Copyright &copy; 2008 - 2018 by the checktestdata developers and
+Checktestdata is Copyright &copy; 2008 - 2019 by the checktestdata developers and
 all respective contributors. The current checktestdata developers are Jeroen
 Bransen, Jaap Eldering, Jan Kuipers, and Tobias Werth; see the git commits for
 a complete list of contributors.
@@ -115,6 +115,6 @@ The developers can be reached through the mailinglist
 you can post. Information, subscription and archives are available at:
 https://www.domjudge.org/mailman/listinfo/domjudge-devel
 
-Some developers and users of checktestdata linger on the IRC channel
-dedicated to DOMjudge on the Freenode network:
-server `irc.freenode.net`, channel `#domjudge`
+DOMjudge has a Slack workspace where a number of developers and users
+of DOMjudge & checktestdata linger. More information can be found at
+https://www.domjudge.org/chat
