@@ -967,8 +967,8 @@ void checktoken(const command& cmd)
 	}
 
 	else if ( cmd.name()=="FLOAT" || cmd.name()=="FLOATP" ) {
-		// Accepts format -?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?
-		// where the last optional part, the exponent, is not allowed
+		// Accepts format -?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?
+		// i.e. no leading zeros, and the exponent is not allowed
 		// with the FIXED option and required with the SCIENTIFIC option.
 
 		size_t nbaseargs = 2;
@@ -1000,7 +1000,9 @@ void checktoken(const command& cmd)
 		         (dotpos==string::npos && digitpos!=data.pos() && data.peek()=='.')) ) {
 			if ( data.readchar()=='.' ) dotpos = data.pos()-1;
 		}
-		// Check that any dot is followed by digit:
+		// Check that there are no leading zeros:
+		if ( first_digit=='0' && dotpos-digitpos>1 ) error("prefix zero(s)");
+		// Check that a dot is followed by a digit again:
 		if ( !isdigit(data.peek(-1)) ) error("digit expected");
 
 		size_t exppos = data.pos();

@@ -33,7 +33,7 @@ build: $(TARGETS) $(SUBST_FILES)
 # These are build during dist stage, and this is independent of
 # whether checktestdata is enabled after configure.
 ifeq ($(PARSERGEN_ENABLED),yes)
-$(PARSER_GEN): config.mk
+$(PARSER_GEN): | config.mk
 
 lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
 	flexc++ $<
@@ -91,7 +91,7 @@ check: checktestdata
 	prog=tests/testpresetprog.in  ; $(checkfail) ; \
 	true
 # Another test for debugging to improve code coverage:
-	@opts=-d ; prog=tests/testprog1.in ; data=tests/testdata1.in ; $(checksucc) ; true
+	@opts=-d ; prog=tests/testprog01.in ; data=tests/testdata01.in ; $(checksucc) ; true
 # Test if generating testdata works and complies with the script:
 	@TMP=`mktemp --tmpdir dj_gendata.XXXXXX` || exit 1 ; data=$$TMP ; \
 	for i in tests/testprog*.in ; do \
@@ -136,5 +136,10 @@ clean:
 distclean: clean coverage-clean
 	-rm -f $(PARSER_GEN)
 
-.PHONY: build dist check clean distclean coverage coverage-clean coverage-report \
+maintainer-clean: distclean
+	-rm -rf autom4te.cache
+	-rm -f config.mk config.status configure
+
+.PHONY: build dist check clean distclean maintainer-clean \
+        coverage coverage-clean coverage-report \
         coverity-conf coverity-build
