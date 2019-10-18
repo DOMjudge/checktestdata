@@ -35,13 +35,19 @@ build: $(TARGETS) $(SUBST_FILES)
 ifeq ($(PARSERGEN_ENABLED),yes)
 $(PARSER_GEN): | config.mk
 
-lex.cc scannerbase.h: checktestdata.l scanner.h scanner.ih
+scannerbase.h: checktestdata.l scanner.h scanner.ih
 	flexc++ $<
 	$(call INSERT_VERSION,FLEXCPP_VERSION,$(shell flexc++ --version))
+lex.cc: scannerbase.h
+	@# generated at the same time as scannerbase.h, nothing more to do here
+	@# (but we still need this dummy recipe)
 
-parse.cc parserbase.h: checktestdata.y parser.h parser.ih parsetype.hpp
+parserbase.h: checktestdata.y parser.h parser.ih parsetype.hpp
 	bisonc++ $<
 	$(call INSERT_VERSION,BISONCPP_VERSION,$(shell bisonc++ --version))
+parse.cc: parserbase.h
+	@# generated at the same time as parserbase.h, nothing more to do here
+	@# (but we still need this dummy recipe)
 endif
 
 checkcmd = ./checktestdata $$opts $$prog $$data
