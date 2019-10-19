@@ -5,8 +5,11 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <memory>
 #include <boost/variant.hpp>
 #include <gmpxx.h>
+
+#include "bigint.hpp"
 
 struct parse_t;
 
@@ -24,14 +27,14 @@ struct none_t {};
 std::ostream& operator<<(std::ostream&, const none_t&);
 
 struct value_t {
-	boost::variant<none_t, mpz_class, mpf_class, std::string> val;
+	boost::variant<none_t, bigint, mpf_class, std::string> val;
 
 	value_t(): val(none_t()) {}
-	explicit value_t(mpz_class x): val(x) {}
+	explicit value_t(bigint x): val(x) {}
 	explicit value_t(mpf_class x): val(x) {}
 	explicit value_t(std::string x): val(x) {}
 
-	operator mpz_class() const;
+	operator bigint() const;
 	operator mpf_class() const;
 
 	// This is a member function instead of a casting operator, since
@@ -78,6 +81,7 @@ struct parse_t {
 	  ~      uninitialized object, to detect unset default arguments
 	*/
 
+	mutable long cachedLong = LONG_MIN;
 	mutable checktestdata::value_t cache;
 
 	parse_t(): val(), args(), op('~') {}

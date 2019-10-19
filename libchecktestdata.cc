@@ -44,7 +44,7 @@ const int display_before_error = 65;
 const int display_after_error  = 50;
 
 size_t prognr;
-command currcmd;
+const command *currcmd;
 
 gmp_randclass gmp_rnd(gmp_randinit_default);
 
@@ -62,8 +62,8 @@ vector<command> program;
 // This stores array-type variables like x[i,j] as string "x" and
 // vector of the indices. Plain variables are stored using an index
 // vector of zero length.
-typedef map<vector<mpz_class>,value_t> indexmap;
-typedef map<value_t,set<vector<mpz_class>>> valuemap;
+typedef map<vector<bigint>,value_t> indexmap;
+typedef map<value_t,set<vector<bigint>>> valuemap;
 map<string,indexmap> variable, preset;
 map<string,valuemap> rev_variable, rev_preset;
 
@@ -75,27 +75,27 @@ int debugging;
 int quiet;
 int gendata;
 
-void debug(const char *, ...) __attribute__((format (printf, 1, 2)));
+void realdebug(const char *, ...) __attribute__((format (printf, 1, 2)));
 
-void debug(const char *format, ...)
+void realdebug(const char *format, ...)
 {
 	va_list ap;
 	va_start(ap,format);
 
-	if ( debugging ) {
-		fprintf(stderr,"debug: ");
+	fprintf(stderr,"debug: ");
 
-        if ( format!=NULL ) {
-			vfprintf(stderr,format,ap);
-        } else {
-			fprintf(stderr,"<no debug data?>");
-        }
-
-		fprintf(stderr,"\n");
+	if ( format!=NULL ) {
+		vfprintf(stderr,format,ap);
+	} else {
+		fprintf(stderr,"<no debug data?>");
 	}
+
+	fprintf(stderr,"\n");
 
 	va_end(ap);
 }
+
+#define debug(...) do { if ( debugging ) realdebug(__VA_ARGS__); } while (0)
 
 void readprogram(istream &in)
 {
@@ -151,20 +151,28 @@ void readtestdata(istream &in)
 {
 	debug("reading testdata...");
 
-	stringstream ss;
-	ss << in.rdbuf();
-	if ( in.fail() ) {
-		cerr << "error reading testdata" << endl;
-		exit(exit_failure);
+	in.seekg(0, std::ios::end);
+	auto size = in.tellg();
+	if (size != -1) {
+		std::string buffer(size, '\0');
+		in.seekg(0);
+		if (size != 0) {
+			in.read(&buffer[0], size);
+		}
+		if (!in.fail()) {
+			data = databuffer(std::move(buffer));
+			return;
+		}
 	}
 
-	data = databuffer(ss.str());
+	cerr << "error reading testdata" << endl;
+	exit(exit_failure);
 }
 
 void error(string msg = string())
 {
 	if ( gendata ) {
-		cerr << "ERROR: in command " << currcmd << ": " << msg << endl << endl;
+		cerr << "ERROR: in command " << *currcmd << ": " << msg << endl << endl;
 		throw generate_exception();
 	}
 
@@ -176,7 +184,7 @@ void error(string msg = string())
 		cerr << data.next(display_after_error) << endl << endl;
 
 		cerr << "ERROR: line " << data.line()+1 << " character " << data.lpos()+1;
-		cerr << " of testdata doesn't match " << currcmd;
+		cerr << " of testdata doesn't match " << *currcmd;
 		if ( msg.length()>0 ) cerr << ": " << msg;
 		cerr << endl << endl;
 	}
@@ -197,15 +205,17 @@ long string2int(string s)
 	return res;
 }
 
-value_t eval(const expr&); // forward declaration
+// forward declarations
+value_t eval(const expr&);
+bigint evalAsInt(const expr& e);
 
 value_t getvar(const expr& var, int use_preset = 0)
 {
-	// Construct index array. The cast to mpz_class automatically
-	// verifies that the index value is of type mpz_class.
-	vector<mpz_class> ind;
+	// Construct index array. The cast to bigint automatically
+	// verifies that the index value is of type bigint.
+	vector<bigint> ind;
 	for(size_t i=0; i<var.nargs(); i++) {
-		ind.push_back(mpz_class(eval(var.args[i])));
+		ind.push_back(evalAsInt(var.args[i]));
 	}
 	if ( use_preset ) {
 		if ( preset.count(var.val) && preset[var.val].count(ind) ) {
@@ -216,8 +226,14 @@ value_t getvar(const expr& var, int use_preset = 0)
 		if ( gendata && preset.count(var.val) && preset[var.val].count(ind) ) {
 			return preset[var.val][ind];
 		}
-		if ( variable.count(var.val) && variable[var.val].count(ind) ) {
-			return variable[var.val][ind];
+		// Avoid double lookups on the hot path
+		auto it = variable.find(var.val);
+		if (it != variable.end()) {
+			auto& map = it->second;
+			auto it2 = map.find(ind);
+			if (it2 != map.end()) {
+				return it2->second;
+			}
 		}
 	}
 	cerr << "variable " << var << " undefined in " << program[prognr] << endl;
@@ -226,11 +242,11 @@ value_t getvar(const expr& var, int use_preset = 0)
 
 void setvar(const expr& var, value_t val, int use_preset = 0)
 {
-	// Construct index array. The cast to mpz_class automatically
-	// verifies that the index value is of type mpz_class.
-	vector<mpz_class> ind;
+	// Construct index array. The cast to bigint automatically
+	// verifies that the index value is of type bigint.
+	vector<bigint> ind;
 	for(size_t i=0; i<var.nargs(); i++) {
-		ind.push_back(mpz_class(eval(var.args[i])));
+		ind.push_back(evalAsInt(var.args[i]));
 	}
 
 	map<string,indexmap> *varlist = &variable;
@@ -277,7 +293,12 @@ value_t value(const expr& x)
 
 	mpz_class intval;
 	mpf_class fltval;
-	if ( intval.set_str(x.val,0)==0 ) return x.cache = value_t(intval);
+	if ( intval.set_str(x.val,0)==0 ) {
+		bigint c = bigint(intval);
+		c.shrink();
+		x.cachedLong = c.small;
+		return x.cache = value_t(c);
+	}
 	else if ( fltval.set_str(x.val,0)==0 ) {
 		// Set sufficient precision:
 		if ( fltval.get_prec()<4*x.val.length() ) {
@@ -293,15 +314,15 @@ value_t value(const expr& x)
 template<class A, class B>
 struct arith_result {
 	typedef typename conditional<
-		is_same<A,mpz_class>::value && is_same<B,mpz_class>::value,
-			mpz_class,
+		is_same<A,bigint>::value && is_same<B,bigint>::value,
+			bigint,
 			mpf_class
 			>::type type;
 };
 
 template<class A, class B> struct arith_compatible {
-	constexpr static bool value = (is_same<mpz_class,A>::value || is_same<mpf_class,A>::value) &&
-		(is_same<mpz_class,B>::value || is_same<mpf_class,B>::value);
+	constexpr static bool value = (is_same<bigint,A>::value || is_same<mpf_class,A>::value) &&
+		(is_same<bigint,B>::value || is_same<mpf_class,B>::value);
 };
 
 template<class A, class B> struct is_comparable {
@@ -362,13 +383,13 @@ DECL_VALUE_CMPOP(!=,ne)
 
 value_t operator -(const value_t &x)
 {
-	return value_t(mpz_class(0)) - x;
+	return value_t(bigint(0)) - x;
 }
 
 value_t operator %(const value_t &x, const value_t &y)
 {
-	const mpz_class *xp, *yp;
-	if ( (xp = boost::get<const mpz_class>(&x.val)) && (yp = boost::get<const mpz_class>(&y.val))) {
+	const bigint *xp, *yp;
+	if ( (xp = boost::get<const bigint>(&x.val)) && (yp = boost::get<const bigint>(&y.val))) {
 		auto res = *xp;
 		res %= *yp;
 		return value_t(res);
@@ -379,31 +400,34 @@ value_t operator %(const value_t &x, const value_t &y)
 
 struct pow_visitor : public boost::static_visitor<value_t> {
 	template<class B, class E>
-	value_t operator()(const B& b, const E& e) const {
+	value_t operator()(const B&, const E&) const {
 		cerr << "only integer exponents allowed in " << program[prognr] << endl;
 		exit(exit_failure);
 	}
 	template<class B>
-	value_t operator()(const B& b, const mpz_class& e) const {
+	value_t operator()(const B& b, const bigint& e) const {
 		if(!e.fits_ulong_p()) {
 			cerr << "integer exponent " << e
 				<< " does not fit in unsigned long in " << program[prognr] << endl;
 			exit(exit_failure);
 		}
-		return pow(b, e);
+		unsigned long f = e.get_ui();
+		return pow(b, f);
 	}
-	value_t pow(const mpz_class& b, const mpz_class& e) const {
+	value_t pow(const bigint& b, unsigned long e) const {
 		mpz_class res;
-		mpz_pow_ui(res.get_mpz_t(), b.get_mpz_t(), e.get_ui());
-		return value_t(res);
+		mpz_pow_ui(res.get_mpz_t(), b.to_mpz().get_mpz_t(), e);
+		bigint res2(res);
+		res2.shrink();
+		return value_t(res2);
 	}
-	value_t pow(const mpf_class& b, const mpz_class& e) const {
+	value_t pow(const mpf_class& b, unsigned long e) const {
 		mpf_class res;
-		mpf_pow_ui(res.get_mpf_t(), b.get_mpf_t(), e.get_ui());
+		mpf_pow_ui(res.get_mpf_t(), b.get_mpf_t(), e);
 		return value_t(res);
 	}
 	template<class B>
-	value_t pow(const B&, const mpz_class&) const {
+	value_t pow(const B&, unsigned long) const {
 		cerr << "exponentiation base must be of arithmetic type in "
 			 << program[prognr] << endl;
 		exit(exit_failure);
@@ -420,7 +444,7 @@ value_t evalfun(args_t funargs)
 	string fun = funargs[0].val;
 	if ( fun=="STRLEN" ) {
 		string str = eval(funargs[1]).getstr();
-		return value_t(mpz_class(str.length()));
+		return value_t(bigint(str.length()));
 	}
 
 	cerr << "unknown function '" << fun << "' in "
@@ -480,8 +504,22 @@ value_t eval(const expr& e)
 		     << program[prognr] << endl;
 		exit(exit_failure);
 	}
-	if ( cachable(e) ) e.cache = res;
+	if ( cachable(e) ) {
+		e.cache = res;
+		if ( res.val.which()==value_int ) {
+			bigint x = res;
+			e.cachedLong = x.small;
+		}
+	}
 	return res;
+}
+
+bigint evalAsInt(const expr& e)
+{
+	if ( e.cachedLong != LONG_MIN ) {
+		return bigint(e.cachedLong);
+	}
+	return eval(e);
 }
 
 bool compare(const expr& cmp)
@@ -531,7 +569,7 @@ bool unique(const args_t& varlist)
 	vector<pair<vector<value_t>,const indexmap::key_type*>> tuples;
 	for(indexmap::iterator it=vars[0]->begin();
 		it!=vars[0]->end(); ++it) {
-		const vector<mpz_class> &index = it->first;
+		const vector<bigint> &index = it->first;
 		vector<value_t> tuple;
 		for(size_t i=0; i<vars.size(); i++) {
 			auto it = vars[i]->find(index);
@@ -814,7 +852,7 @@ void getdecrange(const command& cmd, int *decrange)
 		if ( arg.val.which()!=value_int ) {
 			error((i==0 ? "min":"max")+string("decimal is not an integer"));
 		}
-		mpz_class val = arg;
+		bigint val = arg;
 		if ( val<0 || val>=INT_MAX ) {
 			error(string("the value of ")+(i==0 ? "min":"max")+"decimal is out of range");
 		}
@@ -825,7 +863,7 @@ void getdecrange(const command& cmd, int *decrange)
 
 void gentoken(command cmd, ostream &datastream)
 {
-	currcmd = cmd;
+	currcmd = &cmd;
 	debug("generating token %s", cmd.name().c_str());
 
 	if ( cmd.name()=="SPACE" ) datastream << ' ';
@@ -833,9 +871,9 @@ void gentoken(command cmd, ostream &datastream)
 	else if ( cmd.name()=="NEWLINE" ) datastream << '\n';
 
 	else if ( cmd.name()=="INT" ) {
-		mpz_class lo = eval(cmd.args[0]);
-		mpz_class hi = eval(cmd.args[1]);
-		mpz_class x(lo + gmp_rnd.get_z_range(hi - lo + 1));
+		bigint lo = eval(cmd.args[0]);
+		bigint hi = eval(cmd.args[1]);
+		bigint x(lo.to_mpz() + gmp_rnd.get_z_range((hi - lo + 1).to_mpz()));
 
 		if ( cmd.nargs()>=3 ) {
 			// Check if we have a preset value, then override the
@@ -927,11 +965,12 @@ void gentoken(command cmd, ostream &datastream)
 		cerr << "unknown command " << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	currcmd = nullptr;
 }
 
 void checktoken(const command& cmd)
 {
-	currcmd = cmd;
+	currcmd = &cmd;
 	debug("checking token %s at %lu,%lu",
 	      cmd.name().c_str(),data.line(),data.lpos());
 
@@ -943,12 +982,16 @@ void checktoken(const command& cmd)
 		// Accepts format (0|-?[1-9][0-9]*), i.e. no leading zero's
 		// and no '-0' accepted.
 		string num;
-		while ( isdigit(data.peek()) || (num.empty() && data.peek()=='-') ) {
+		if ( data.peek()=='-' ) {
+			data.readchar();
+			num += '-';
+		}
+		while ( isdigit(data.peek()) ) {
 			num += data.readchar();
 		}
 
-		mpz_class lo = eval(cmd.args[0]);
-		mpz_class hi = eval(cmd.args[1]);
+		bigint lo = evalAsInt(cmd.args[0]);
+		bigint hi = evalAsInt(cmd.args[1]);
 
 //		debug("%s <= %s <= %s",lo.get_str().c_str(),num.c_str(),hi.get_str().c_str());
 		if ( cmd.nargs()>=3 ) debug("'%s' = '%s'",
@@ -960,7 +1003,7 @@ void checktoken(const command& cmd)
 		if ( num.size()>=1 && num[0]=='-' &&
 		     (num.size()==1 || num[1]=='0') ) error("invalid minus sign (-0 not allowed)");
 
-		mpz_class x(num);
+		bigint x(num);
 
 		if ( x<lo || x>hi ) error("value out of range");
 		if ( cmd.nargs()>=3 ) setvar(cmd.args[2],value_t(x));
@@ -1088,6 +1131,7 @@ void checktoken(const command& cmd)
 		cerr << "unknown command " << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	currcmd = nullptr;
 }
 
 // This function processes the outer control structure commands both
@@ -1099,7 +1143,7 @@ void checktestdata(ostream &datastream)
 
 	while ( true ) {
 		const command &cmd = program[prognr];
-		currcmd = cmd;
+		currcmd = &cmd;
 
 		if ( cmd.name()=="EOF" ) {
 			if ( gendata ) {
@@ -1120,11 +1164,11 @@ void checktestdata(ostream &datastream)
 
 			if ( cmd.name()=="REPI" || cmd.name()=="WHILEI" ) {
 				loopvar = 1;
-				setvar(cmd.args[0],value_t(mpz_class(i)));
+				setvar(cmd.args[0],value_t(bigint(i)));
 			}
 
 			if ( cmd.name()=="REP" || cmd.name()=="REPI" ) {
-				mpz_class n = eval(cmd.args[loopvar]);
+				bigint n = eval(cmd.args[loopvar]);
 				if ( !n.fits_ulong_p() ) {
 					cerr << "'" << n << "' does not fit in an unsigned long in "
 						 << program[prognr] << endl;
@@ -1163,7 +1207,7 @@ void checktestdata(ostream &datastream)
 				}
 				checktestdata(datastream);
 				i++;
-				if ( loopvar ) setvar(cmd.args[0],value_t(mpz_class(i)));
+				if ( loopvar ) setvar(cmd.args[0],value_t(bigint(i)));
 			}
 
 			// And skip to end of loop
@@ -1218,6 +1262,7 @@ void checktestdata(ostream &datastream)
 			prognr++;
 		}
 	}
+	currcmd = nullptr;
 }
 
 void init_checktestdata(std::istream &progstream, int opt_mask)

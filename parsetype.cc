@@ -60,15 +60,15 @@ std::ostream& operator<<(std::ostream& os, const none_t&) {
 	return os << "<no value>";
 }
 
-value_t::operator mpz_class() const
+value_t::operator bigint() const
 {
-	return boost::get<mpz_class>(val);
+	return boost::get<bigint>(val);
 }
 
 value_t::operator mpf_class() const
 {
-	if(const mpz_class* p = boost::get<mpz_class>(&val))
-		return *p;
+	if(const bigint* p = boost::get<bigint>(&val))
+		return (*p).to_mpz();
 	return boost::get<mpf_class>(val);
 }
 

@@ -18,27 +18,37 @@ class Parser: public ParserBase
     public:
         Parser(): d_scanner() {}
         Parser(std::istream& in, int startState = 0): d_scanner(in)
-	        { d_scanner.parserStart = startState; }
+            { d_scanner.parserStart = startState; }
         int parse();
 
         // The final result of parsing:
         parse_t parseResult;
 
     private:
-        void error(char const *msg);    // called on (syntax) errors
         int lex();                      // returns the next token from the
                                         // lexical scanner.
         void print();                   // use, e.g., d_token, d_loc
 
-    // support functions for parse():
+#if ( BISONCPP_VERSION >= 60000LL )
+        void error();                   // called on (syntax) errors
+        void exceptionHandler(std::exception const &exc);
+#else
+        void error(const char *msg);    // called on (syntax) errors
+#if ( BISONCPP_VERSION >= 40200LL )
+        void exceptionHandler__(std::exception const &exc);
+#endif
+#endif
+
+    // support functions (the __ versions are used from version 6 and above)
         void executeAction(int ruleNr);
         void errorRecovery();
         int lookup(bool recovery);
         void nextToken();
+        void executeAction__(int ruleNr);
+        void errorRecovery__();
+        void nextCycle__();
+        void nextToken__();
         void print__();
-#if ( BISONCPP_VERSION >= 40200LL )
-        void exceptionHandler__(std::exception const &exc);
-#endif
 };
 
 #endif
