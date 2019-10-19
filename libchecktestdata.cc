@@ -151,14 +151,22 @@ void readtestdata(istream &in)
 {
 	debug("reading testdata...");
 
-	stringstream ss;
-	ss << in.rdbuf();
-	if ( in.fail() ) {
-		cerr << "error reading testdata" << endl;
-		exit(exit_failure);
+	in.seekg(0, std::ios::end);
+	auto size = in.tellg();
+	if (size != -1) {
+		std::string buffer(size, '\0');
+		in.seekg(0);
+		if (size != 0) {
+			in.read(&buffer[0], size);
+		}
+		if (!in.fail()) {
+			data = databuffer(std::move(buffer));
+			return;
+		}
 	}
 
-	data = databuffer(ss.str());
+	cerr << "error reading testdata" << endl;
+	exit(exit_failure);
 }
 
 void error(const string &msg = "")
