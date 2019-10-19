@@ -44,7 +44,7 @@ const int display_before_error = 65;
 const int display_after_error  = 50;
 
 size_t prognr;
-command currcmd;
+const command *currcmd;
 
 gmp_randclass gmp_rnd(gmp_randinit_default);
 
@@ -164,7 +164,7 @@ void readtestdata(istream &in)
 void error(string msg = string())
 {
 	if ( gendata ) {
-		cerr << "ERROR: in command " << currcmd << ": " << msg << endl << endl;
+		cerr << "ERROR: in command " << *currcmd << ": " << msg << endl << endl;
 		throw generate_exception();
 	}
 
@@ -176,7 +176,7 @@ void error(string msg = string())
 		cerr << data.next(display_after_error) << endl << endl;
 
 		cerr << "ERROR: line " << data.line()+1 << " character " << data.lpos()+1;
-		cerr << " of testdata doesn't match " << currcmd;
+		cerr << " of testdata doesn't match " << *currcmd;
 		if ( msg.length()>0 ) cerr << ": " << msg;
 		cerr << endl << endl;
 	}
@@ -825,7 +825,7 @@ void getdecrange(const command& cmd, int *decrange)
 
 void gentoken(command cmd, ostream &datastream)
 {
-	currcmd = cmd;
+	currcmd = &cmd;
 	debug("generating token %s", cmd.name().c_str());
 
 	if ( cmd.name()=="SPACE" ) datastream << ' ';
@@ -927,11 +927,12 @@ void gentoken(command cmd, ostream &datastream)
 		cerr << "unknown command " << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	currcmd = nullptr;
 }
 
 void checktoken(const command& cmd)
 {
-	currcmd = cmd;
+	currcmd = &cmd;
 	debug("checking token %s at %lu,%lu",
 	      cmd.name().c_str(),data.line(),data.lpos());
 
@@ -1088,6 +1089,7 @@ void checktoken(const command& cmd)
 		cerr << "unknown command " << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	currcmd = nullptr;
 }
 
 // This function processes the outer control structure commands both
@@ -1099,7 +1101,7 @@ void checktestdata(ostream &datastream)
 
 	while ( true ) {
 		const command &cmd = program[prognr];
-		currcmd = cmd;
+		currcmd = &cmd;
 
 		if ( cmd.name()=="EOF" ) {
 			if ( gendata ) {
@@ -1218,6 +1220,7 @@ void checktestdata(ostream &datastream)
 			prognr++;
 		}
 	}
+	currcmd = nullptr;
 }
 
 void init_checktestdata(std::istream &progstream, int opt_mask)
