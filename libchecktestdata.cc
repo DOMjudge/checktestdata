@@ -75,27 +75,27 @@ int debugging;
 int quiet;
 int gendata;
 
-void debug(const char *, ...) __attribute__((format (printf, 1, 2)));
+void realdebug(const char *, ...) __attribute__((format (printf, 1, 2)));
 
-void debug(const char *format, ...)
+void realdebug(const char *format, ...)
 {
 	va_list ap;
 	va_start(ap,format);
 
-	if ( debugging ) {
-		fprintf(stderr,"debug: ");
+	fprintf(stderr,"debug: ");
 
-        if ( format!=NULL ) {
-			vfprintf(stderr,format,ap);
-        } else {
-			fprintf(stderr,"<no debug data?>");
-        }
-
-		fprintf(stderr,"\n");
+	if ( format!=NULL ) {
+		vfprintf(stderr,format,ap);
+	} else {
+		fprintf(stderr,"<no debug data?>");
 	}
+
+	fprintf(stderr,"\n");
 
 	va_end(ap);
 }
+
+#define debug(...) do { if ( debugging ) realdebug(__VA_ARGS__); } while (0)
 
 void readprogram(istream &in)
 {
