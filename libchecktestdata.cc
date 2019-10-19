@@ -216,8 +216,14 @@ value_t getvar(const expr& var, int use_preset = 0)
 		if ( gendata && preset.count(var.val) && preset[var.val].count(ind) ) {
 			return preset[var.val][ind];
 		}
-		if ( variable.count(var.val) && variable[var.val].count(ind) ) {
-			return variable[var.val][ind];
+		// Avoid double lookups on the hot path
+		auto it = variable.find(var.val);
+		if (it != variable.end()) {
+			auto& map = it->second;
+			auto it2 = map.find(ind);
+			if (it2 != map.end()) {
+				return it2->second;
+			}
 		}
 	}
 	cerr << "variable " << var << " undefined in " << program[prognr] << endl;
