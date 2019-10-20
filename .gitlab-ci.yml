@@ -6,4 +6,4 @@ tests:
     - go get -v github.com/bazelbuild/bazelisk
     - go env GOPATH
   script:
-    - ../gopath/bin/bazelisk test //:test
+    - /go/bin/bazelisk test //:test
