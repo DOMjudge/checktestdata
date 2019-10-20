@@ -1,6 +1,6 @@
 # Checktestdata
 
-[![Build Status](https://img.shields.io/travis/DOMjudge/checktestdata.svg)](https://travis-ci.org/DOMjudge/checktestdata)
+[![Build status](https://gitlab.com/DOMjudge/checktestdata/badges/antlr_rewrite/pipeline.svg)](https://gitlab.com/DOMjudge/checktestdata/commits/antlr_rewrite)
 [![Coverage Status](https://img.shields.io/coveralls/DOMjudge/checktestdata.svg)](https://coveralls.io/r/DOMjudge/checktestdata)
 [![Coverity Scan Status](https://img.shields.io/coverity/scan/4325.svg)](https://scan.coverity.com/projects/checktestdata)
 
@@ -27,43 +27,42 @@ Haskell embedded domain-specific language.
 
 Requirements:
 
- * A C++ compiler that supports C++11 including regex support.
-   (GNU g++ >= 4.9 and LLVM clang++ >= 3.5 are known to work)
+ * A modern C++ compiler.
+   (GNU g++ >= 7.0 is known to work)
  * Libboost (http://www.boost.org/)
  * The GNU GMP libraries (http://gmplib.org/)
- * Automake (https://www.gnu.org/software/automake/)
- * flexc++/bisonc++ (optional)
-
-If you don't have `flexc++` and/or `bisonc++` available, you may use the release
-branch where we've pre-generated the scanner/parser files.
 
 Command line for installing the build dependencies on Debian or
-Ubuntu, when using the release branch:
+Ubuntu:
 ```
-apt-get install make g++ libboost-dev libgmp-dev autotools-dev automake
+apt-get install make g++ libboost-dev libgmp-dev
 ```
 For Redhat-like distributions try:
 ```
-yum install make g++ boost-devel gmp-devel automake
+yum install make g++ boost-devel gmp-devel
 ```
 
-To compile checktestdata, run:
+In order to compile checktestdata, you need to install
+<a href="https://bazel.build">Bazel</a>.
+We recommend to run Bazel via the wrapper
+<a href="https://github.com/bazelbuild/bazelisk">bazelisk</a>. To install bazelisk, execute
 ```
-./bootstrap
-make dist
-make
+go get github.com/bazelbuild/bazelisk
+# Add bazelisk to the default path.
+export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-Leave out the `make dist` step if you use the pre-generated scanner/parser
-files on the release branch.
+To compile checktestdata and to run a number of tests:
+```
+bazelisk test //:test
+```
 
-Finally, you can run
-```
-make check
-```
-to run a number of tests. Note that a few of the tests are
-non-deterministic and may sometimes return an error. This is ok, but the
-`make check` command should run successfully more than 90% of the time.
+Note that a few of the tests are
+non-deterministic and may sometimes return an error.
+This is ok, but the command above should run successfully more than 90% of the
+time.
+
+The checktestdata binary is available in `bazel-bin/checktestdata`.
 
 For usage instructions run:
 ```
