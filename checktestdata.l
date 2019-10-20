@@ -65,14 +65,14 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 
 \" {
 	/* begin of string */
-	begin(StartCondition__::string);
+	begin(StartCondition_::string);
 }
 
 <string>{
 \" {
 	/* end of string */
 	setMatched(matched().substr(0,matched().length()-1));
-	begin(StartCondition__::INITIAL);
+	begin(StartCondition_::INITIAL);
 	return Parser::STRING;
 }
 
