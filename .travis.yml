@@ -2,8 +2,6 @@ dist: bionic
 sudo: required
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
       - wget
       - pkg-config
@@ -11,7 +9,7 @@ addons:
       - libgmp-dev
       - g++-7
 before_install:
-  - go get github.com/bazelbuild/bazelisk
+  - go get -v github.com/bazelbuild/bazelisk
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
 script:
