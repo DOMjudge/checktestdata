@@ -7,8 +7,8 @@ tests:
     - go env GOPATH
   script:
     - /go/bin/bazelisk test //:test
-    - find bazel-bin/
+    - cp bazel-bin/checktestdata .
   artifacts:
     when: always
     paths:
-      - bazel-bin/checktestdata
+      - checktestdata
