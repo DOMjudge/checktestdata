@@ -88,7 +88,11 @@ inline void Scanner::preCode()
     // optionally replace by your own code
 }
 
+#if ( FLEXCPP_VERSION >= 20700LL )
 inline void Scanner::postCode(PostEnum_ type)
+#else
+inline void Scanner::postCode(PostEnum__ type)
+#endif
 {
     // optionally replace by your own code
 }
