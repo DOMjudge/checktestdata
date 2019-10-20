@@ -11,9 +11,8 @@ addons:
       - libgmp-dev
       - g++-7
 before_install:
-  - wget https://github.com/bazelbuild/bazel/releases/download/0.15.0/bazel_0.15.0-linux-x86_64.deb
-  - sudo dpkg -i bazel_0.15.0-linux-x86_64.deb
+  - go get github.com/bazelbuild/bazelisk
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
 script:
-  - bazel test test
+  - /home/travis/go/bin/bazelisk test //:test
