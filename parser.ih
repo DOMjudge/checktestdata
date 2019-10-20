@@ -31,12 +31,14 @@ inline void Parser::print()
 {
 }
 
-#if ( BISONCPP_VERSION < 60000LL )
+#if ( BISONCPP_VERSION >= 60000LL )
+inline void Parser::exceptionHandler(std::exception const &exc)
+#else
 inline void Parser::exceptionHandler__(std::exception const &exc)
+#endif
 {
     throw;              // re-implement to handle exceptions thrown by actions
 }
-#endif
 
 
     // Add here includes that are only required for the compilation
