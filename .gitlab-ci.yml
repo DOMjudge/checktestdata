@@ -7,3 +7,7 @@ tests:
     - go env GOPATH
   script:
     - /go/bin/bazelisk test //:test
+  artifacts:
+    when: always
+    paths:
+      - bazel-bin/checktestdata
