@@ -36,14 +36,23 @@ class Scanner: public ScannerBase
         int lex();
 
     private:
+#if ( FLEXCPP_VERSION >= 20700LL )
         int lex_();
         int executeAction_(size_t ruleNr);
+#else
+        int lex__();
+        int executeAction__(size_t ruleNr);
+#endif
 
         void print();
         void preCode();     // re-implement this function for code that must
                             // be exec'ed before the patternmatching starts
 
+#if ( FLEXCPP_VERSION >= 20700LL )
         void postCode(PostEnum_ type);
+#else
+        void postCode(PostEnum__ type);
+#endif
                             // re-implement this function for code that must
                             // be exec'ed after the rules's actions.
 };
@@ -67,7 +76,11 @@ inline int Scanner::lex()
 		parserStart = 0;
 		return res;
 	}
+#if ( FLEXCPP_VERSION >= 20700LL )
     return lex_();
+#else
+    return lex__();
+#endif
 }
 
 inline void Scanner::preCode()
@@ -75,14 +88,22 @@ inline void Scanner::preCode()
     // optionally replace by your own code
 }
 
-inline void Scanner::postCode([[maybe_unused]] PostEnum_ type)
+#if ( FLEXCPP_VERSION >= 20700LL )
+inline void Scanner::postCode(PostEnum_ type)
+#else
+inline void Scanner::postCode(PostEnum__ type)
+#endif
 {
     // optionally replace by your own code
 }
 
 inline void Scanner::print()
 {
+#if ( FLEXCPP_VERSION >= 20700LL )
     print_();
+#else
+    print__();
+#endif
 }
 
 
