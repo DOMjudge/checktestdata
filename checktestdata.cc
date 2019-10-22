@@ -488,7 +488,7 @@ int main(int argc, char** argv) {
   std::cin.tie(nullptr);
   if (argc < 2) {
     throw std::runtime_error{
-        absl::StrCat("too few input arguments to ", argv[0])};
+        absl::StrCat("Too few input arguments to ", argv[0])};
   }
   std::ifstream program_input(argv[1]);
   if (!program_input) {
@@ -502,7 +502,7 @@ int main(int argc, char** argv) {
   checktestdataParser parser(&tokens);
   tree::ParseTree* tree = parser.main();
   if (!lexer.hitEOF || parser.getNumberOfSyntaxErrors()) {
-    throw std::runtime_error{absl::StrCat("failed to compile ctd ",
+    throw std::runtime_error{absl::StrCat("Failed to compile program file ",
                                           lexer.hitEOF, " ",
                                           parser.getNumberOfSyntaxErrors())};
   }
@@ -519,7 +519,9 @@ int main(int argc, char** argv) {
       } else {
         std::ifstream input_file(argv[i]);
         if (!input_file) {
-          throw std::runtime_error{"Error reading input file."};
+          throw std::runtime_error{
+	    absl::StrCat("Error reading input file '", argv[i], "'.")
+	  };
         }
         s = std::string(std::istreambuf_iterator<char>(input_file), {});
       }
@@ -533,5 +535,6 @@ int main(int argc, char** argv) {
     });
   }
   for (auto& thread : threads) thread.join();
+
   std::quick_exit(0);
 }
