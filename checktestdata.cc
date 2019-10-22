@@ -492,7 +492,9 @@ int main(int argc, char** argv) {
   }
   std::ifstream program_input(argv[1]);
   if (!program_input) {
-    throw std::runtime_error{"Error ctd file."};
+    throw std::runtime_error{
+	    absl::StrCat("Error reading program file '", argv[1], "'.")
+    };
   }
   ANTLRInputStream input(program_input);
   checktestdataLexer lexer(&input);
