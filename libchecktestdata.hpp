@@ -17,7 +17,7 @@ const int opt_debugging     = 4; // print additional debugging statements
 
 const int float_precision = 15; // output precision (digits) of floats
 
-void init_checktestdata(std::istream &progstream, int opt_mask = 0);
+void init_checktestdata(std::istream &progstream, int opt_mask = 0, unsigned long seed = -1);
 /* Initialize libchecktestdata by loading syntax from progstream and
  * setting options from opt_mask bitmask. This function must be called
  * before any other function.
