@@ -64,7 +64,7 @@ void usage()
 "                         be careful: extra whitespace matches greedily!\n"
 "  -g, --generate       don't check but generate random testdata\n"
 "  -s, --seed=<integer> use the given integer to seed the random number\n"
-"                         generator. Must fit in an unsigned long.\n"
+"                         generator. Must be non-negative and fit in a long.\n"
 "  -p, --preset=<name>=<value>[,...]\n"
 "                       preset variable(s) <name> when generating testdata;\n"
 "                         this overrules anything in the program; note that\n"
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 {
 	int whitespace_ok;
 	int generate;
-	unsigned long seed;
+	long seed;
 	int debugging;
 	int quiet;
 	string presets;

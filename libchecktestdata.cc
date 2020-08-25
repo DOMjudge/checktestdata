@@ -1229,7 +1229,7 @@ void checktestdata(ostream &datastream)
 	currcmd = nullptr;
 }
 
-void init_checktestdata(std::istream &progstream, int opt_mask, unsigned long seed)
+void init_checktestdata(std::istream &progstream, int opt_mask, long seed)
 {
 	// Output floats with high precision:
 	cout << setprecision(float_precision);
@@ -1256,7 +1256,7 @@ void init_checktestdata(std::istream &progstream, int opt_mask, unsigned long se
 	}
 
 	// Initialize random generator
-	if ( seed == static_cast<unsigned long>(-1)) {
+	if ( seed == -1 ) {
 		struct timespec time;
 		clock_gettime(CLOCK_REALTIME, &time);
 		mpz_class mpz_seed = 1000000000 * mpz_class(time.tv_sec) + time.tv_nsec;
