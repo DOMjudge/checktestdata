@@ -55,6 +55,11 @@ checksucc = $(checkcmd) >/dev/null 2>&1 || \
 		{ echo "Running '$(checkcmd)'$${try:+ attempt $$try} did not succeed..." ; exit 1; }
 checkfail = $(checkcmd) >/dev/null 2>&1 && \
 		{ echo "Running '$(checkcmd)'$${try:+ attempt $$try} did not fail..."    ; exit 1; }
+checkgeneratesucc = $(checksucc) && \
+		{ cmp -s $$data $$expected_data || { echo "RESULT $$?" ; echo "Running '$(checkcmd)' did not generated expected output..." ; exit 1; } }
+checkgeneratefail = $(checksucc) && \
+		{ cmp -s $$data $$expected_data && { echo "Running '$(checkcmd)' did not fail..." ; exit 1; } }
+
 
 config.mk: config.mk.in
 	$(error run ./bootstrap and/or configure to create config.mk)
@@ -107,6 +112,17 @@ check: checktestdata
 		for try in `seq 10` ; do opts=-g ; $(checksucc) ; opts='' ; $(checksucc) ; done ; \
 	done ; \
 	rm -f $$TMP
+# A single hardcoded test for the --seed option:
+	@opts='-g -s 31415' ; \
+	TMP=`mktemp --tmpdir dj_gendata.XXXXXX` || exit 1 ; \
+	data=$$TMP ; \
+	prog=tests/testgenerateprog.in ; \
+	expected_data=tests/testgeneratedata.in  ; $(checkgeneratesucc) ; \
+	expected_data=tests/testgeneratedata.err ; $(checkgeneratefail) ; \
+	opts='-g -s 0' ; \
+	expected_data=tests/testgeneratedata.in  ; $(checkgeneratefail) ; \
+	true
+	@rm -f $$TMP
 
 coverage:
 	$(MAKE) clean
