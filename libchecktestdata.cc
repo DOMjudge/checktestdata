@@ -1007,7 +1007,7 @@ void checktoken(const command& cmd)
 		while ( (isdigit(data.peek()) ||
 		         (dotpos==string::npos && digitpos!=data.pos() && data.peek()=='.')) ) {
 			if ( data.readchar()=='.' ) dotpos = data.pos()-1;
-			else if(dotpos == string::npos) ++num_leading_digits;
+			if ( dotpos == string::npos ) ++num_leading_digits;
 		}
 		// Check that there are no leading zeros:
 		if ( first_digit=='0' && num_leading_digits>1 ) error("prefix zero(s)");
