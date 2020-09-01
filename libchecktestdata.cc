@@ -1022,8 +1022,14 @@ void checktoken(const command& cmd)
 			has_exp = true;
 			if ( data.peek()=='-' || data.peek()=='+' ) data.readchar();
 			char c = '!';
-			while ( isdigit(data.peek()) ) c = data.readchar();
+			char first_digit = data.peek();
+			size_t num_digits = 0;
+			while ( isdigit(data.peek()) ) {
+				c = data.readchar();
+				num_digits += 1;
+			}
 			if ( !isdigit(c) ) error("digit expected");
+			if ( first_digit=='0' && num_digits>1 ) error("prefix zero(s) in exponent");
 		}
 
 		if ( cmd.name()=="FLOATP" ) {
