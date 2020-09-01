@@ -1003,12 +1003,14 @@ void checktoken(const command& cmd)
 		if ( !isdigit(data.peek()) ) error("digit expected");
 		size_t digitpos = data.pos(), dotpos = string::npos;
 		char first_digit = data.peek();
+		size_t num_leading_digits = 0;
 		while ( (isdigit(data.peek()) ||
 		         (dotpos==string::npos && digitpos!=data.pos() && data.peek()=='.')) ) {
 			if ( data.readchar()=='.' ) dotpos = data.pos()-1;
+			else if(dotpos == string::npos) ++num_leading_digits;
 		}
 		// Check that there are no leading zeros:
-		if ( first_digit=='0' && dotpos-digitpos>1 ) error("prefix zero(s)");
+		if ( first_digit=='0' && num_leading_digits>1 ) error("prefix zero(s)");
 		// Check that a dot is followed by a digit again:
 		if ( !isdigit(data.peek(-1)) ) error("digit expected");
 
