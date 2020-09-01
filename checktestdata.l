@@ -65,14 +65,22 @@ SCIENTIFIC { return Parser::OPT_SCIENTIFIC; }
 
 \" {
 	/* begin of string */
+#if ( FLEXCPP_VERSION >= 20700LL )
+	begin(StartCondition_::string);
+#else
 	begin(StartCondition__::string);
+#endif
 }
 
 <string>{
 \" {
 	/* end of string */
 	setMatched(matched().substr(0,matched().length()-1));
+#if ( FLEXCPP_VERSION >= 20700LL )
+	begin(StartCondition_::INITIAL);
+#else
 	begin(StartCondition__::INITIAL);
+#endif
 	return Parser::STRING;
 }
 

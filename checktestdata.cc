@@ -32,6 +32,7 @@ int show_version;
 struct option const long_opts[] = {
 	{"whitespace-ok", no_argument, NULL,         'w'},
 	{"generate",no_argument,       NULL,         'g'},
+	{"seed",    required_argument, NULL,         's'},
 	{"preset",  required_argument, NULL,         'p'},
 	{"debug",   no_argument,       NULL,         'd'},
 	{"quiet",   no_argument,       NULL,         'q'},
@@ -62,6 +63,8 @@ void usage()
 "                         and trailing whitespace, but not newlines;\n"
 "                         be careful: extra whitespace matches greedily!\n"
 "  -g, --generate       don't check but generate random testdata\n"
+"  -s, --seed=<integer> use the given integer to seed the random number\n"
+"                         generator. Must be non-negative and fit in a long.\n"
 "  -p, --preset=<name>=<value>[,...]\n"
 "                       preset variable(s) <name> when generating testdata;\n"
 "                         this overrules anything in the program; note that\n"
@@ -78,6 +81,7 @@ int main(int argc, char **argv)
 {
 	int whitespace_ok;
 	int generate;
+	long seed;
 	int debugging;
 	int quiet;
 	string presets;
@@ -89,8 +93,9 @@ int main(int argc, char **argv)
 	/* Parse command-line options */
 	whitespace_ok = 0;
 	generate = debugging = quiet = show_help = show_version = 0;
+	seed = -1;
 	opterr = 0;
-	while ( (opt = getopt_long(argc,argv,"+wgp:dq",long_opts,(int *) 0))!=-1 ) {
+	while ( (opt = getopt_long(argc,argv,"+wgs:p:dq",long_opts,(int *) 0))!=-1 ) {
 		switch ( opt ) {
 		case 0:   /* long-only option */
 			break;
@@ -99,6 +104,9 @@ int main(int argc, char **argv)
 			break;
 		case 'g':
 			generate = 1;
+			break;
+		case 's':
+			seed = stoul(optarg);
 			break;
 		case 'p':
 			presets = optarg;
@@ -157,7 +165,8 @@ int main(int argc, char **argv)
 	if (debugging    ) options |= opt_debugging;
 	if (quiet        ) options |= opt_quiet;
 
-	init_checktestdata(prog, options);
+
+	init_checktestdata(prog, options, seed);
 
 	// Parse presets after initialization to have debugging available
 	if ( !presets.empty() && !parse_preset_list(presets) ) {

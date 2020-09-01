@@ -1,0 +1,20 @@
+WHILEI(n, !MATCH("\n"), SPACE)
+	INT(0, 10^99, m[n])
+END
+NEWLINE
+
+# Check integer overflow:
+SET(x=-1)
+REP(130)
+	SET(y=-x-1)
+	SET(y=y-x)
+	SET(x=2*x)
+	ASSERT( x+y==-1 )
+	ASSERT( y+1!=x && y+1>y && x-1<x )
+	ASSERT( x*x > y*y )
+
+	REPI(i, n)
+		SET(z=x*m[i]) ASSERT( z/m[i]==x && z%m[i]==0 )
+		SET(z=y*m[i]) ASSERT( z/m[i]==y && z%m[i]==0 )
+	END
+END

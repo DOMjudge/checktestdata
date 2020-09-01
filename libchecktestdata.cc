@@ -44,7 +44,7 @@ const int display_before_error = 65;
 const int display_after_error  = 50;
 
 size_t prognr;
-command currcmd;
+const command *currcmd;
 
 gmp_randclass gmp_rnd(gmp_randinit_default);
 
@@ -75,27 +75,27 @@ int debugging;
 int quiet;
 int gendata;
 
-void debug(const char *, ...) __attribute__((format (printf, 1, 2)));
+void realdebug(const char *, ...) __attribute__((format (printf, 1, 2)));
 
-void debug(const char *format, ...)
+void realdebug(const char *format, ...)
 {
 	va_list ap;
 	va_start(ap,format);
 
-	if ( debugging ) {
-		fprintf(stderr,"debug: ");
+	fprintf(stderr,"debug: ");
 
-        if ( format!=NULL ) {
-			vfprintf(stderr,format,ap);
-        } else {
-			fprintf(stderr,"<no debug data?>");
-        }
-
-		fprintf(stderr,"\n");
+	if ( format!=NULL ) {
+		vfprintf(stderr,format,ap);
+	} else {
+		fprintf(stderr,"<no debug data?>");
 	}
+
+	fprintf(stderr,"\n");
 
 	va_end(ap);
 }
+
+#define debug(...) do { if ( debugging ) realdebug(__VA_ARGS__); } while (0)
 
 void readprogram(istream &in)
 {
@@ -164,7 +164,7 @@ void readtestdata(istream &in)
 void error(string msg = string())
 {
 	if ( gendata ) {
-		cerr << "ERROR: in command " << currcmd << ": " << msg << endl << endl;
+		cerr << "ERROR: in command " << *currcmd << ": " << msg << endl << endl;
 		throw generate_exception();
 	}
 
@@ -176,7 +176,7 @@ void error(string msg = string())
 		cerr << data.next(display_after_error) << endl << endl;
 
 		cerr << "ERROR: line " << data.line()+1 << " character " << data.lpos()+1;
-		cerr << " of testdata doesn't match " << currcmd;
+		cerr << " of testdata doesn't match " << *currcmd;
 		if ( msg.length()>0 ) cerr << ": " << msg;
 		cerr << endl << endl;
 	}
@@ -216,8 +216,14 @@ value_t getvar(const expr& var, int use_preset = 0)
 		if ( gendata && preset.count(var.val) && preset[var.val].count(ind) ) {
 			return preset[var.val][ind];
 		}
-		if ( variable.count(var.val) && variable[var.val].count(ind) ) {
-			return variable[var.val][ind];
+		// Avoid double lookups on the hot path
+		auto it = variable.find(var.val);
+		if (it != variable.end()) {
+			auto& map = it->second;
+			auto it2 = map.find(ind);
+			if (it2 != map.end()) {
+				return it2->second;
+			}
 		}
 	}
 	cerr << "variable " << var << " undefined in " << program[prognr] << endl;
@@ -825,7 +831,7 @@ void getdecrange(const command& cmd, int *decrange)
 
 void gentoken(command cmd, ostream &datastream)
 {
-	currcmd = cmd;
+	currcmd = &cmd;
 	debug("generating token %s", cmd.name().c_str());
 
 	if ( cmd.name()=="SPACE" ) datastream << ' ';
@@ -927,11 +933,12 @@ void gentoken(command cmd, ostream &datastream)
 		cerr << "unknown command " << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	currcmd = nullptr;
 }
 
 void checktoken(const command& cmd)
 {
-	currcmd = cmd;
+	currcmd = &cmd;
 	debug("checking token %s at %lu,%lu",
 	      cmd.name().c_str(),data.line(),data.lpos());
 
@@ -996,12 +1003,14 @@ void checktoken(const command& cmd)
 		if ( !isdigit(data.peek()) ) error("digit expected");
 		size_t digitpos = data.pos(), dotpos = string::npos;
 		char first_digit = data.peek();
+		size_t num_leading_digits = 0;
 		while ( (isdigit(data.peek()) ||
 		         (dotpos==string::npos && digitpos!=data.pos() && data.peek()=='.')) ) {
 			if ( data.readchar()=='.' ) dotpos = data.pos()-1;
+			if ( dotpos == string::npos ) ++num_leading_digits;
 		}
 		// Check that there are no leading zeros:
-		if ( first_digit=='0' && dotpos-digitpos>1 ) error("prefix zero(s)");
+		if ( first_digit=='0' && num_leading_digits>1 ) error("prefix zero(s)");
 		// Check that a dot is followed by a digit again:
 		if ( !isdigit(data.peek(-1)) ) error("digit expected");
 
@@ -1013,8 +1022,14 @@ void checktoken(const command& cmd)
 			has_exp = true;
 			if ( data.peek()=='-' || data.peek()=='+' ) data.readchar();
 			char c = '!';
-			while ( isdigit(data.peek()) ) c = data.readchar();
+			char first_digit = data.peek();
+			size_t num_digits = 0;
+			while ( isdigit(data.peek()) ) {
+				c = data.readchar();
+				num_digits += 1;
+			}
 			if ( !isdigit(c) ) error("digit expected");
+			if ( first_digit=='0' && num_digits>1 ) error("prefix zero(s) in exponent");
 		}
 
 		if ( cmd.name()=="FLOATP" ) {
@@ -1088,6 +1103,7 @@ void checktoken(const command& cmd)
 		cerr << "unknown command " << program[prognr] << endl;
 		exit(exit_failure);
 	}
+	currcmd = nullptr;
 }
 
 // This function processes the outer control structure commands both
@@ -1099,7 +1115,7 @@ void checktestdata(ostream &datastream)
 
 	while ( true ) {
 		const command &cmd = program[prognr];
-		currcmd = cmd;
+		currcmd = &cmd;
 
 		if ( cmd.name()=="EOF" ) {
 			if ( gendata ) {
@@ -1218,9 +1234,10 @@ void checktestdata(ostream &datastream)
 			prognr++;
 		}
 	}
+	currcmd = nullptr;
 }
 
-void init_checktestdata(std::istream &progstream, int opt_mask)
+void init_checktestdata(std::istream &progstream, int opt_mask, long seed)
 {
 	// Output floats with high precision:
 	cout << setprecision(float_precision);
@@ -1247,10 +1264,14 @@ void init_checktestdata(std::istream &progstream, int opt_mask)
 	}
 
 	// Initialize random generator
-	struct timespec time;
-	clock_gettime(CLOCK_REALTIME,&time);
-	mpz_class seed = 1000000000 * mpz_class(time.tv_sec) + time.tv_nsec;
-	gmp_rnd.seed(seed);
+	if ( seed == -1 ) {
+		struct timespec time;
+		clock_gettime(CLOCK_REALTIME, &time);
+		mpz_class mpz_seed = 1000000000 * mpz_class(time.tv_sec) + time.tv_nsec;
+		gmp_rnd.seed(mpz_seed);
+	} else {
+		gmp_rnd.seed(seed);
+	}
 
 	// Initialize current position in program.
 	prognr = 0;
