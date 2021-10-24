@@ -75,13 +75,12 @@ checktestdata: checktestdata.cc $(CHKOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 check: checktestdata
-	@for i in tests/testprog*.in ; do \
-		n=$${i#tests/testprog} ; n=$${n%.in} ; \
-		prog=$$i ; \
-		for data in tests/testdata$$n.in*  ; do $(checksucc) ; done ; \
-		for data in tests/testdata$$n.err* ; do $(checkfail) ; done ; \
-		data=tests/testdata$$n.in ; \
-		for prog in tests/testprog$$n.err* ; do $(checkfail) ; done ; \
+	@for prog in tests/test_*_prog.in ; do \
+		base=$${prog%_prog.*} ; \
+		for data in $${base}_data.in*  ; do $(checksucc) ; done ; \
+		for data in $${base}_data.err* ; do $(checkfail) ; done ; \
+		data=$${base}_data.in ; \
+		for prog in $${base}_prog.err* ; do $(checkfail) ; done ; \
 	done || true
 # Some additional tests with --whitespace-ok option enabled:
 	@opts=-w ; \
@@ -102,13 +101,11 @@ check: checktestdata
 	prog=tests/testpresetprog.in  ; $(checkfail) ; \
 	true
 # Another test for debugging to improve code coverage:
-	@opts=-d ; prog=tests/testprog01.in ; data=tests/testdata01.in ; $(checksucc) ; true
+	@opts=-d ; prog=tests/test_01_prog.in ; data=tests/test_01_data.in ; $(checksucc) ; true
 # Test if generating testdata works and complies with the script:
 	@TMP=`mktemp --tmpdir dj_gendata.XXXXXX` || exit 1 ; data=$$TMP ; \
-	for i in tests/testprog*.in ; do \
-		grep 'IGNORE GENERATE TESTING' $$i >/dev/null && continue ; \
-		n=$${i#tests/testprog} ; n=$${n%.in} ; \
-		prog=$$i ; \
+	for prog in tests/test_*_prog.in ; do \
+		grep 'IGNORE GENERATE TESTING' $$prog >/dev/null && continue ; \
 		for try in `seq 10` ; do opts=-g ; $(checksucc) ; opts='' ; $(checksucc) ; done ; \
 	done ; \
 	rm -f $$TMP
