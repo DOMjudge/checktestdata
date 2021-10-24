@@ -4,7 +4,7 @@ ifneq ($(wildcard config.mk),)
 include config.mk
 endif
 
-CXXFLAGS += -std=c++14 -DVERSION="\"$(VERSION)\""
+CXXFLAGS += -std=c++17 -lstdc++fs -DVERSION="\"$(VERSION)\""
 
 COVERAGE_CXXFLAGS = $(CXXFLAGS) -fprofile-arcs -ftest-coverage
 
