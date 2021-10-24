@@ -84,13 +84,10 @@ check: checktestdata
 	done || true
 # Some additional tests with --whitespace-ok option enabled:
 	@opts=-w ; \
-	for i in tests/testwsprog*.in ; do \
-		n=$${i#tests/testwsprog} ; n=$${n%.in} ; \
-		prog=$$i ; \
-		for data in tests/testwsdata$$n.in*  ; do $(checksucc) ; done ; \
-		for data in tests/testwsdata$$n.err* ; do $(checkfail) ; done ; \
-		data=tests/testwsdata$$n.in ; \
-		for prog in tests/testwsprog$$n.err* ; do $(checkfail) ; done ; \
+	for prog in tests/testws_*_prog.in ; do \
+		base=$${prog%_prog.*} ; \
+		for data in $${base}_data.in*  ; do $(checksucc) ; done ; \
+		for data in $${base}_data.err* ; do $(checkfail) ; done ; \
 	done || true
 # A single hardcoded test for the --preset option:
 	@opts='-g -p n=10,pi=0.31415E1,foo="\"bar\""' ; \
