@@ -94,11 +94,11 @@ check: checktestdata
 	done || true
 # A single hardcoded test for the --preset option:
 	@opts='-g -p n=10,pi=0.31415E1,foo="\"bar\""' ; \
-	prog=tests/testpresetprog.in  ; $(checksucc) ; \
-	prog=tests/testpresetprog.err ; $(checkfail) ; \
+	prog=tests/testpreset_prog.in  ; $(checksucc) ; \
+	prog=tests/testpreset_prog.err ; $(checkfail) ; \
 	true
 	@opts='-g -p n=10,pi=0.31415E1,foo="\"bar' ; \
-	prog=tests/testpresetprog.in  ; $(checkfail) ; \
+	prog=tests/testpreset_prog.in  ; $(checkfail) ; \
 	true
 # Another test for debugging to improve code coverage:
 	@opts=-d ; prog=tests/test_01_prog.in ; data=tests/test_01_data.in ; $(checksucc) ; true
@@ -113,11 +113,11 @@ check: checktestdata
 	@opts='-g -s 31415' ; \
 	TMP=`mktemp --tmpdir dj_gendata.XXXXXX` || exit 1 ; \
 	data=$$TMP ; \
-	prog=tests/testgenerateprog.in ; \
-	expected_data=tests/testgeneratedata.in  ; $(checkgeneratesucc) ; \
-	expected_data=tests/testgeneratedata.err ; $(checkgeneratefail) ; \
+	prog=tests/testgenerate_prog.in ; \
+	expected_data=tests/testgenerate_data.in  ; $(checkgeneratesucc) ; \
+	expected_data=tests/testgenerate_data.err ; $(checkgeneratefail) ; \
 	opts='-g -s 0' ; \
-	expected_data=tests/testgeneratedata.in  ; $(checkgeneratefail) ; \
+	expected_data=tests/testgenerate_data.in  ; $(checkgeneratefail) ; \
 	true
 	@rm -f $$TMP
 
