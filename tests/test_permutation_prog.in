@@ -1,0 +1,24 @@
+# This is an example for how to test input data that contains two
+# lists of (not necessarily unique) integers that should be
+# permutations of each other.
+
+# Tag this since the generate testdata test will fail:
+# IGNORE GENERATE TESTING
+
+INT(1,1000,n) NEWLINE
+REPI(i,n,SPACE) INT(0,10000000,a[i]) END NEWLINE
+REPI(i,n,SPACE) INT(0,10000000,b[i]) END NEWLINE
+
+# We have to first initialize all array indices that we're going to
+# use before we can in/decrement them below.
+REPI(i,n)
+    SET(count[a[i]] = 0)
+    SET(count[b[i]] = 0)
+END
+REPI(i,n)
+    SET(count[a[i]] = count[a[i]]+1)
+    SET(count[b[i]] = count[b[i]]-1)
+END
+REPI(i,n)
+    ASSERT(count[a[i]]==0 && count[b[i]]==0)
+END
