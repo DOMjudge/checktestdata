@@ -165,8 +165,12 @@ int main(int argc, char **argv)
 	if (debugging    ) options |= opt_debugging;
 	if (quiet        ) options |= opt_quiet;
 
-
-	init_checktestdata(prog, options, seed);
+	try {
+		init_checktestdata(prog, options, seed);
+	} catch (const std::exception &e) {
+		cerr << "Error initializing: " << e.what() << endl;
+		exit(exit_failure);
+	}
 
 	// Parse presets after initialization to have debugging available
 	if ( !presets.empty() && !parse_preset_list(presets) ) {
