@@ -20,7 +20,7 @@ private:
 
 public:
 	databuffer() {}
-	databuffer(std::string _data): data(_data), _pos(0), _line(0), _lpos(0) {}
+	databuffer(const std::string &_data): data(_data), _pos(0), _line(0), _lpos(0) {}
 
 	bool eof() const { return _pos >= data.size(); }
 

@@ -161,7 +161,7 @@ void readtestdata(istream &in)
 	data = databuffer(ss.str());
 }
 
-void error(string msg = string())
+void error(const string &msg = "")
 {
 	if ( gendata ) {
 		cerr << "ERROR: in command " << *currcmd << ": " << msg << endl << endl;
@@ -184,7 +184,7 @@ void error(string msg = string())
 	throw doesnt_match_exception();
 }
 
-long string2int(string s)
+long string2int(const string &s)
 {
 	long res;
 	char *ptr;
@@ -646,7 +646,7 @@ void checknewline()
 }
 
 #define MAX_MULT 10
-int getmult(string &exp, unsigned int &index)
+int getmult(const string &exp, unsigned int &index)
 {
 	index++;
 
@@ -695,7 +695,7 @@ int getmult(string &exp, unsigned int &index)
 	return (min + get_random(1 + max - min));
 }
 
-string genregex(string exp)
+string genregex(const string &exp)
 {
 	unsigned int i = 0;
 	string res;
