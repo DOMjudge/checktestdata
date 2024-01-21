@@ -207,7 +207,7 @@ long string2int(const string &s)
 
 // forward declarations
 value_t eval(const expr&);
-bigint evalAsInt(const expr& e);
+bigint eval_as_int(const expr& e);
 
 value_t getvar(const expr& var, int use_preset = 0)
 {
@@ -215,7 +215,7 @@ value_t getvar(const expr& var, int use_preset = 0)
 	// verifies that the index value is of type bigint.
 	vector<bigint> ind;
 	for(size_t i=0; i<var.nargs(); i++) {
-		ind.push_back(evalAsInt(var.args[i]));
+		ind.push_back(eval_as_int(var.args[i]));
 	}
 	if ( use_preset ) {
 		if ( preset.count(var.val) && preset[var.val].count(ind) ) {
@@ -246,7 +246,7 @@ void setvar(const expr& var, value_t val, int use_preset = 0)
 	// verifies that the index value is of type bigint.
 	vector<bigint> ind;
 	for(size_t i=0; i<var.nargs(); i++) {
-		ind.push_back(evalAsInt(var.args[i]));
+		ind.push_back(eval_as_int(var.args[i]));
 	}
 
 	map<string,indexmap> *varlist = &variable;
@@ -296,7 +296,7 @@ value_t value(const expr& x)
 	if ( intval.set_str(x.val,0)==0 ) {
 		bigint c = bigint(intval);
 		c.shrink();
-		x.cachedLong = c.small;
+		x.cached_long = c.small;
 		return x.cache = value_t(c);
 	}
 	else if ( fltval.set_str(x.val,0)==0 ) {
@@ -508,16 +508,16 @@ value_t eval(const expr& e)
 		e.cache = res;
 		if ( res.val.which()==value_int ) {
 			bigint x = res;
-			e.cachedLong = x.small;
+			e.cached_long = x.small;
 		}
 	}
 	return res;
 }
 
-bigint evalAsInt(const expr& e)
+bigint eval_as_int(const expr& e)
 {
-	if ( e.cachedLong != LONG_MIN ) {
-		return bigint(e.cachedLong);
+	if ( e.cached_long != LONG_MIN ) {
+		return bigint(e.cached_long);
 	}
 	return eval(e);
 }
@@ -786,17 +786,17 @@ string genregex(const string &exp)
 						possible.insert(exp[i]);
 					}
 				}
-				vector<char> possibleVec;
+				vector<char> possible_vec;
 				if ( inverted ) {
 					for (char c = ' '; c <= '~'; c++) {
-						if ( !possible.count(c) ) possibleVec.push_back(c);
+						if ( !possible.count(c) ) possible_vec.push_back(c);
 					}
 				} else {
-					copy(possible.begin(), possible.end(), std::back_inserter(possibleVec));
+					copy(possible.begin(), possible.end(), std::back_inserter(possible_vec));
 				}
 				int mult = getmult(exp, i);
 				for (int cnt = 0; cnt < mult; cnt++) {
-					res += possibleVec[get_random(possibleVec.size())];
+					res += possible_vec[get_random(possible.size())];
 				}
 			}
 			break;
@@ -990,8 +990,8 @@ void checktoken(const command& cmd)
 			num += data.readchar();
 		}
 
-		bigint lo = evalAsInt(cmd.args[0]);
-		bigint hi = evalAsInt(cmd.args[1]);
+		bigint lo = eval_as_int(cmd.args[0]);
+		bigint hi = eval_as_int(cmd.args[1]);
 
 //		debug("%s <= %s <= %s",lo.get_str().c_str(),num.c_str(),hi.get_str().c_str());
 		if ( cmd.nargs()>=3 ) debug("'%s' = '%s'",
