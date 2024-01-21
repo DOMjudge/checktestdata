@@ -16,11 +16,12 @@ int isspace_notnewline(char c) { return isspace(c) && c!='\n'; }
 class databuffer {
 private:
 	std::string data;
-	size_t _pos, _line, _lpos;
+	size_t _pos = 0, _line = 0, _lpos = 0;
 
 public:
 	databuffer() {}
-	databuffer(std::string _data): data(_data), _pos(0), _line(0), _lpos(0) {}
+	databuffer(const std::string &_data): data(_data) {}
+	databuffer(std::string&& _data): data(std::move(_data)) {}
 
 	bool eof() const { return _pos >= data.size(); }
 
