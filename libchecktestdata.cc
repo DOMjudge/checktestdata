@@ -31,6 +31,7 @@
 #include "parser.h"
 #include "libchecktestdata.hpp"
 #include "databuffer.hpp"
+#include "bigint.hpp"
 
 using namespace std;
 

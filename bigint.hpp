@@ -5,6 +5,8 @@
 #error "This code requires the __builtin_*_overflow compiler builtin functions."
 #endif
 
+#include <gmpxx.h>
+
 /**
  * Wrapper around gmp's mpz_class, with a fast path for values that fit in a long.
  */

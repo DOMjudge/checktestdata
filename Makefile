@@ -66,7 +66,7 @@ config.mk: config.mk.in
 
 libchecktestdata.o: config.mk
 libchecktestdata.o: $(PARSER_GEN)
-libchecktestdata.o: %.o: %.cc %.hpp databuffer.hpp parser.h
+libchecktestdata.o: %.o: %.cc %.hpp databuffer.hpp bigint.hpp parser.h
 
 checktestdata: CPPFLAGS += $(BOOST_CPPFLAGS)
 checktestdata: LDFLAGS  += $(BOOST_LDFLAGS) $(STATIC_LINK_START) $(LIBGMPXX) $(STATIC_LINK_END)
