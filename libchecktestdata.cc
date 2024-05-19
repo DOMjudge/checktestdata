@@ -298,7 +298,7 @@ value_t value(const expr& x)
 		bigint c = bigint(intval);
 		c.shrink();
 		x.cached_long = c.small;
-		return x.cache = value_t(c);
+		return x.cache = value_t(std::move(c));
 	}
 	else if ( fltval.set_str(x.val,0)==0 ) {
 		// Set sufficient precision:
@@ -306,7 +306,7 @@ value_t value(const expr& x)
 			fltval.set_prec(4*x.val.length());
 			fltval.set_str(x.val,0);
 		}
-		return x.cache = value_t(fltval);
+		return x.cache = value_t(std::move(fltval));
 	}
 	return value_t();
 }
@@ -393,7 +393,7 @@ value_t operator %(const value_t &x, const value_t &y)
 	if ( (xp = boost::get<const bigint>(&x.val)) && (yp = boost::get<const bigint>(&y.val))) {
 		auto res = *xp;
 		res %= *yp;
-		return value_t(res);
+		return value_t(std::move(res));
 	}
 	cerr << "can only use modulo on integers in " << program[prognr] << endl;
 	exit(exit_failure);
@@ -420,12 +420,12 @@ struct pow_visitor : public boost::static_visitor<value_t> {
 		mpz_pow_ui(res.get_mpz_t(), b.to_mpz().get_mpz_t(), e);
 		bigint res2(res);
 		res2.shrink();
-		return value_t(res2);
+		return value_t(std::move(res2));
 	}
 	value_t pow(const mpf_class& b, unsigned long e) const {
 		mpf_class res;
 		mpf_pow_ui(res.get_mpf_t(), b.get_mpf_t(), e);
-		return value_t(res);
+		return value_t(std::move(res));
 	}
 	template<class B>
 	value_t pow(const B&, unsigned long) const {
