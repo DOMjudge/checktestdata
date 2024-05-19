@@ -1,0 +1,7 @@
+# String comparisons
+STRING("1") NEWLINE
+SET(x = "abc")
+SET(y = "hello")
+ASSERT(x < "b")
+ASSERT(y >= "helln")
+ASSERT(x != y)
