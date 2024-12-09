@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <getopt.h>
 
@@ -148,6 +149,10 @@ int main(int argc, char **argv)
 	fstream fdata;
 	if ( argc>optind+1 ) {
 		char *datafile = argv[optind+1];
+		if ( filesystem::is_directory(datafile) ) {
+			cerr << "Expected a file instead of a directory: '" << datafile << "'.\n";
+			exit(exit_failure);
+		}
 		ios_base::openmode mode = generate ? ios_base::out|ios_base::trunc|ios_base::binary : ios_base::in|ios_base::binary;
 		fdata.open(datafile, mode);
 		if ( fdata.fail() ) {
