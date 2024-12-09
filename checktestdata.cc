@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <getopt.h>
 
@@ -147,7 +148,17 @@ int main(int argc, char **argv)
 	// Check for testdata file
 	fstream fdata;
 	if ( argc>optind+1 ) {
-		char *datafile = argv[optind+1];
+	        char *datafile = argv[optind+1];
+		if (std::filesystem::is_directory(datafile)) {
+		  // Filter directory, as otherwise, tellg() returns
+		  // arbitrary values in readtestdata() which makes
+		  // that function crash. There is a small race
+		  // condition with actually opening the file with
+		  // that name below, but it's not solvable easily
+		  // when sticking to C++ libraries.
+		  cerr << "Expected a file instead of a directory '" << datafile << "'.\n";
+		  exit(exit_failure);
+		}
 		ios_base::openmode mode = generate ? ios_base::out|ios_base::trunc|ios_base::binary : ios_base::in|ios_base::binary;
 		fdata.open(datafile, mode);
 		if ( fdata.fail() ) {
