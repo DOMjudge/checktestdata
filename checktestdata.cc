@@ -45,7 +45,7 @@ void version()
 {
         printf("%s -- version %s, written by %s\n\n",PROGRAM,VERSION,AUTHORS);
         printf(
-"Copyright (c) 2008 - 2018 by the checktestdata developers and all\n"
+"Copyright (c) 2008 - 2025 by the checktestdata developers and all\n"
 "respective contributors. All rights reserved.\n"
 "%s comes with ABSOLUTELY NO WARRANTY and is provided \"as is\".\n"
 "You are free to modify and redistribute this program under the conditions\n"
