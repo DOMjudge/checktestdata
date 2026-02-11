@@ -1,0 +1,1 @@
+REGEX("\d\s{3}\d{3}\w{10}") NEWLINE
