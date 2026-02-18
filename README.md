@@ -1,6 +1,5 @@
 # Checktestdata
 
-[![Build Status](https://img.shields.io/travis/DOMjudge/checktestdata.svg)](https://travis-ci.org/DOMjudge/checktestdata)
 [![Coverage Status](https://img.shields.io/coveralls/DOMjudge/checktestdata.svg)](https://coveralls.io/r/DOMjudge/checktestdata)
 [![Coverity Scan Status](https://img.shields.io/coverity/scan/4325.svg)](https://scan.coverity.com/projects/checktestdata)
 
