@@ -30,41 +30,8 @@ jobs:
     steps:
       - name: Install container prerequisites
         if: matrix.container
-        run: apt-get update && apt-get install -y git
+        run: apt-get update && apt-get install -y git sudo
 
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y \
-            autoconf \
-            g++ \
-            make \
-            libboost-regex-dev \
-            libgmp-dev
-
-      - name: Bootstrap and configure
-        run: |
-          aclocal -I m4
-          autoconf
-          ./configure --disable-parsergeneration
-
-      - name: Build
-        run: make build
-
-      - name: Test
-        run: make check
-
-  parser-generation:
-    runs-on: ubuntu-24.04
-
-    name: Parser Generation
-
-    env:
-      DEBIAN_FRONTEND: noninteractive
-
-    steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
@@ -72,6 +39,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             autoconf \
+            g++ \
+            make \
             libboost-regex-dev \
             libgmp-dev \
             bisonc++ \
@@ -83,11 +52,11 @@ jobs:
           autoconf
           ./configure
 
-      - name: Regenerate parser
+      - name: Generate parser
         run: make dist
 
-      - name: Build with regenerated parser
+      - name: Build
         run: make build
 
-      - name: Test with regenerated parser
+      - name: Test
         run: make check
