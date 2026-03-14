@@ -164,6 +164,14 @@ void readtestdata(istream &in)
 			data = databuffer(std::move(buffer));
 			return;
 		}
+	} else {
+		in.clear();
+		stringstream ss;
+		ss << in.rdbuf();
+		if (!in.fail()) {
+			data = databuffer(ss.str());
+			return;
+		}
 	}
 
 	cerr << "error reading testdata" << endl;
