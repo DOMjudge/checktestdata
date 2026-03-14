@@ -149,6 +149,7 @@ int main(int argc, char **argv)
 	fstream fdata;
 	if ( argc>optind+1 ) {
 		char *datafile = argv[optind+1];
+		if ( datafile==string("-") ) goto use_stdin;
 		if ( filesystem::is_directory(datafile) ) {
 			cerr << "Expected a file instead of a directory: '" << datafile << "'.\n";
 			exit(exit_failure);
@@ -160,6 +161,7 @@ int main(int argc, char **argv)
 			exit(exit_failure);
 		}
 	}
+  use_stdin:
 	iostream& data = fdata.is_open() ? static_cast<iostream&>(fdata)
 	                                 : (generate ? static_cast<iostream&>(cout)
 	                                             : static_cast<iostream&>(cin) );
