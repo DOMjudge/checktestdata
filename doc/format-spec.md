@@ -28,6 +28,7 @@ The following grammar sub-elements are defined:
                  <expr> <compare> <expr> | <testcommand>
 
 That is, variables can take integer, floating point as well as string values.
+Variables can be indexed with (multiple) integers, i.e., behave like arrays.
 No dynamic casting is performed, except that integers can be cast into floats.
 Integers and floats of arbitrary size and precision are supported, as well as
 the arithmetic operators `+-*%/^` with the usual rules of precedence. An
