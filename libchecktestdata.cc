@@ -38,7 +38,6 @@ using namespace std;
 namespace checktestdata {
 
 class doesnt_match_exception {};
-class eof_found_exception {};
 class generate_exception {};
 
 const int display_before_error = 65;
@@ -1158,7 +1157,7 @@ void checktestdata(ostream &datastream)
 {
 	datastream << setprecision(float_precision);
 
-	while ( true ) {
+	while ( prognr<program.size() ) {
 		const command &cmd = program[prognr];
 		currcmd = &cmd;
 
@@ -1169,8 +1168,8 @@ void checktestdata(ostream &datastream)
 			} else {
 				debug("checking EOF");
 				if ( !data.eof() ) error();
-				throw eof_found_exception();
 			}
+			prognr++;
 		}
 
 		else if ( loop_cmds.count(cmd.name()) ) {
@@ -1353,7 +1352,6 @@ bool checksyntax(istream &datastream)
 	catch (doesnt_match_exception) {
 		return false;
 	}
-	catch (eof_found_exception) {}
 
 	return true;
 }
