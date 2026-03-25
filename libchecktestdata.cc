@@ -214,6 +214,190 @@ long string2int(const string &s)
 	return res;
 }
 
+// cache for compiled regular expressions
+map<string, regex> regex_cache;
+
+// restrict/adjust c++ standart regex behaviour:
+// '.' matches everything, including newline
+// '[...]' character set (non empty). '^' form the complement of the charset
+// '{m,n}' repeat m to n times (m and n are optional)
+// '{m}' repeat exactly  m times (m is mandatory)
+// '*', '+', '?' shorthand repeat notation
+// '|' union of two regex
+// '(...)' parenthesis
+// '\' escape special characters
+class RegexParser {
+	static constexpr int STATE_EMPTY = 1;
+	static constexpr int STATE_NONEMPTY = 2;
+	static constexpr int STATE_REPEAT = 3;
+
+	static constexpr char ANY_CHAR = '\0';
+	static constexpr string_view SPECIAL = "(){}[]*+?|\\^.-";
+	static constexpr string_view UNSAFE = "(){}[]*+?|\\^.-&#$~";
+	static constexpr string_view CHARSET_UNSAFE = "[]|\\^-&~";
+
+	static bool is_special(char c) {
+		return SPECIAL.find(&c, 0, 1) != string_view::npos;
+	}
+
+	static bool is_charset_unsafe(char c) {
+		return CHARSET_UNSAFE.find(&c, 0, 1) != string_view::npos;
+	}
+
+	static bool is_unsafe(char c) {
+		return UNSAFE.find(&c, 0, 1) != string_view::npos;
+	}
+
+	string raw;
+	string_view todo;
+	string out;
+
+	string pop() {
+		size_t len = todo.size() >= 2 && todo[0] == '\\' && is_special(todo[1]) ? 2 : 1;
+		string token = string(todo.substr(0, len));
+		todo.remove_prefix(token.size());
+		return token;
+	}
+
+	void consume(char expected = ANY_CHAR, bool literal = false) {
+		string token = pop();
+		if ( expected!=ANY_CHAR && !token.empty() && token[0]!=expected ) {
+			error("invalid regex: unexpected char");
+		}
+		assert(!token.empty());
+		if ( literal && token.size()==1 && is_unsafe(token[0]) ) out += '\\';
+		if ( !literal && token=="." ) token = "[\\s\\S]";
+		out += token;
+	}
+
+	void parse_charset() {
+		consume('[');
+		if ( !todo.empty() && todo[0]=='^' ) consume();
+		vector<string> tmp;
+		auto flush_tmp = [&](){
+			for ( string& token : tmp ) {
+				if ( token.size()==1 && is_charset_unsafe(token[0]) ) out += '\\';
+				out += token;
+			}
+			tmp.clear();
+		};
+		bool empty = true;
+		while ( !todo.empty() && todo[0]!=']' ) {
+			if ( todo[0]=='[' ) {
+				error("invalid regex: nested charset?");
+			}
+			tmp.push_back(pop());
+			empty = false;
+			if ( tmp.size() >= 3 && tmp[tmp.size()-2]=="-" ) {
+				string lhs = tmp[tmp.size()-3];
+				string rhs = tmp[tmp.size()-1];
+				if ( lhs.back()>rhs.back() ) {
+					error("invalid regex: invalid character range");
+				}
+				tmp.pop_back();
+				tmp.pop_back();
+				flush_tmp();
+				out += '-';
+				tmp.push_back(rhs);
+				flush_tmp();
+			}
+		}
+		flush_tmp();
+		if ( empty ) error("empty character set");
+		consume(']');
+	}
+
+	int parse_non_negative_int() {
+		string digits = "";
+		while ( !todo.empty() && todo[0]>='0' && todo[0]<='9' ) {
+			out += todo[0];
+			digits += todo[0];
+			todo.remove_prefix(1);
+		}
+		if ( digits.size()>1 && digits[0]=='0' ) {
+			error("invalid regex: range bound has leading zeros");
+		}
+		return digits.empty() ? -1 : string2int(digits);
+	}
+
+	void parse_repeat() {
+		consume('{');
+		int lower = parse_non_negative_int();
+		if ( !todo.empty() && todo[0]==',' ) {
+			if ( lower < 0 ) out += '0';
+			consume();
+			int upper = parse_non_negative_int();
+			if ( lower>=0 && upper>=0 && lower>upper ) {
+				error("invalid regex: invalid range");
+			}
+		} else if ( lower<0 ) {
+			error("invalid regex: missing range length");
+		}
+		consume('}');
+	}
+
+	void parse() {
+		int state = STATE_EMPTY;
+		auto transition = [&](int next) {
+			if ( next==STATE_REPEAT ) {
+				if ( state==STATE_EMPTY ) {
+					error("invalid regex: nothing to repeat");
+				} else if ( state==STATE_REPEAT ) {
+					error("invalid regex: multiple repeats");
+				}
+			}
+			state = next;
+		};
+		while ( !todo.empty() && todo[0]!=')' ) {
+			switch ( todo[0] ) {
+			case '[':
+				transition(STATE_NONEMPTY);
+				parse_charset();
+				break;
+			case '(':
+				transition(STATE_NONEMPTY);
+				consume();
+				parse();
+				consume(')');
+				break;
+			case '{':
+				transition(STATE_REPEAT);
+				parse_repeat();
+				break;
+			case '*':
+			case '+':
+			case '?':
+				transition(STATE_REPEAT);
+				consume();
+				break;
+			case '|':
+				transition(STATE_EMPTY);
+				consume();
+				break;
+			case '.':
+				transition(STATE_NONEMPTY);
+				consume();
+				break;
+			default:
+				transition(STATE_NONEMPTY);
+				consume(ANY_CHAR, true);
+			}
+		}
+	}
+
+public:
+	RegexParser(const string& raw_) : raw(raw_), todo(raw) {}
+
+	regex compile() {
+		if ( !todo.empty() ) parse();
+		if ( !todo.empty() ) {
+			assert(todo[0]==')');
+			error("invalid regex: unmatched parenthesis");
+		}
+		return regex(out, regex::optimize | regex::nosubs);
+	}
+};
+
 // forward declarations
 value_t eval(const expr&);
 bigint eval_as_int(const expr& e);
@@ -952,7 +1136,7 @@ void gentoken(command cmd, ostream &datastream)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string regexstr = eval(cmd.args[0]).getstr();
-//		regex e1(regex, regex::extended); // this is only to check the expression
+//		RegexParser(regexstr).compile(); // this is only to check the expression
 		string str = genregex(regexstr);
 		datastream << str;
 		if ( cmd.nargs()>=2 ) setvar(cmd.args[1],value_t(str));
@@ -1114,7 +1298,11 @@ void checktoken(const command& cmd)
 
 	else if ( cmd.name()=="REGEX" ) {
 		string str = eval(cmd.args[0]).getstr();
-		regex regexstr(str,regex::extended|regex::nosubs|regex::optimize);
+		auto cache_it = regex_cache.find(str);
+		if ( cache_it == regex_cache.end() ) {
+			 cache_it = regex_cache.emplace(str, RegexParser(str).compile()).first;
+		}
+		regex regexstr = cache_it->second;
 		smatch res;
 		string matchstr;
 
