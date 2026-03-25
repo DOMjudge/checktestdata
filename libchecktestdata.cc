@@ -41,8 +41,8 @@ class doesnt_match_exception {};
 class eof_found_exception {};
 class generate_exception {};
 
-const int display_before_error = 65;
-const int display_after_error  = 50;
+constexpr int display_before_error = 65;
+constexpr int display_after_error  = 50;
 
 size_t prognr;
 const command *currcmd;
@@ -63,8 +63,8 @@ vector<command> program;
 // This stores array-type variables like x[i,j] as string "x" and
 // vector of the indices. Plain variables are stored using an index
 // vector of zero length.
-typedef map<vector<bigint>,value_t> indexmap;
-typedef map<value_t,set<vector<bigint>>> valuemap;
+using indexmap = map<vector<bigint>,value_t>;
+using valuemap = map<value_t,set<vector<bigint>>>;
 map<string,indexmap> variable, preset;
 map<string,valuemap> rev_variable, rev_preset;
 
@@ -322,11 +322,11 @@ value_t value(const expr& x)
 
 template<class A, class B>
 struct arith_result {
-	typedef typename conditional<
+	using type = typename conditional<
 		is_same<A,bigint>::value && is_same<B,bigint>::value,
 			bigint,
 			mpf_class
-			>::type type;
+			>::type;
 };
 
 template<class A, class B> struct arith_compatible {
@@ -352,7 +352,7 @@ struct arithmetic_##name : public boost::static_visitor<value_t> {\
 	}\
 	template<class A, class B, typename enable_if<arith_compatible<A,B>::value,int>::type = 0,\
 		class C = typename arith_result<A,B>::type>\
-	value_t operator()(const A& a, const B& b)const  {\
+	value_t operator()(const A& a, const B& b)const {\
 		return value_t(C(a op b));\
 	}\
 };\
@@ -364,12 +364,12 @@ value_t operator op(const value_t &x, const value_t &y) \
 #define DECL_VALUE_CMPOP(op,name) \
 struct arithmetic_##name : public boost::static_visitor<bool> {\
 	template<class A, class B, typename enable_if<!is_comparable<A,B>::value,int>::type = 0>\
-	bool operator()(const A& a, const B& b)const  {\
+	bool operator()(const A& a, const B& b)const {\
 		cerr << "cannot compute " << a << " " #op " " << b << endl; \
 		exit(exit_failure);\
 	}\
 	template<class A, class B, typename enable_if<is_comparable<A,B>::value,int>::type = 0>\
-	bool operator()(const A& a, const B& b)const  {\
+	bool operator()(const A& a, const B& b)const {\
 		return a op b;\
 	}\
 };\
