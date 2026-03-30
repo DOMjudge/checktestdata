@@ -214,10 +214,10 @@ long string2int(const string &s)
 	return res;
 }
 
-// cache for compiled regular expressions
+// Cache for compiled regular expressions
 map<string, regex> regex_cache;
 
-// restrict/adjust c++ standart regex behaviour:
+// Restrict/adjust c++ standard regex behaviour:
 // '.' matches everything, including newline
 // '[...]' character set (non empty). '^' form the complement of the charset
 // '{m,n}' repeat m to n times (m and n are optional)
