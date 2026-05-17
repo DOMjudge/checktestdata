@@ -125,6 +125,7 @@ The following commands are available:
 <dd>Match the extended regular expression 'str', which must be of
     string type. Matching is performed greedily and '.' (a dot)
     matches a newline, use <tt>[^\n]</tt> to work around this.
+    More details about the supported regex syntax can be found [here](regex-spec.md). 
     Optionally assign the matched string to variable 'name'. Note that
     since some string characters have to be escaped already, you might
     need to double escape them in a regex string. For example, to

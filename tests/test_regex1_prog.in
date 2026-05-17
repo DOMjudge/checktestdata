@@ -1,0 +1,12 @@
+# IGNORE GENERATE TESTING
+REGEX("a a") # contains space
+REGEX("[e-h]") # character class
+REGEX("[I-M]") # character class
+REGEX("[5-8]") # character class
+REGEX("[^a]") # character class
+STRING("a")
+REGEX("x?") # optional
+REGEX("y?") # optional
+REGEX("z?") # optional
+STRING("b")
+REGEX(".+") # any including newline
