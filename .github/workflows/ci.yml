@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 24.04
+            os: ubuntu-24.04
+            container:
+          - name: Debian 13
+            os: ubuntu-latest
+            container: debian:13
+
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container || '' }}
+
+    name: "Build & Test (${{ matrix.name }})"
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: Install container prerequisites
+        if: matrix.container
+        run: apt-get update && apt-get install -y git sudo
+
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            g++ \
+            make \
+            libboost-regex-dev \
+            libgmp-dev \
+            bisonc++ \
+            flexc++
+
+      - name: Bootstrap and configure
+        run: |
+          aclocal -I m4
+          autoconf
+          ./configure
+
+      - name: Generate parser
+        run: make dist
+
+      - name: Build
+        run: make build
+
+      - name: Test
+        run: make check

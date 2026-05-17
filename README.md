@@ -1,6 +1,5 @@
 # Checktestdata
 
-[![Build Status](https://img.shields.io/travis/DOMjudge/checktestdata.svg)](https://travis-ci.org/DOMjudge/checktestdata)
 [![Coverage Status](https://img.shields.io/coveralls/DOMjudge/checktestdata.svg)](https://coveralls.io/r/DOMjudge/checktestdata)
 [![Coverity Scan Status](https://img.shields.io/coverity/scan/4325.svg)](https://scan.coverity.com/projects/checktestdata)
 
@@ -96,7 +95,7 @@ anything.
 
 ## Copyright & Licencing
 
-Checktestdata is Copyright &copy; 2008 - 2019 by the checktestdata developers and
+Checktestdata is Copyright &copy; 2008 - 2026 by the checktestdata developers and
 all respective contributors. The current checktestdata developers are Jeroen
 Bransen, Jaap Eldering, Jan Kuipers, and Tobias Werth; see the git commits for
 a complete list of contributors.

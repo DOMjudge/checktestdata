@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <getopt.h>
 
@@ -45,7 +46,7 @@ void version()
 {
         printf("%s -- version %s, written by %s\n\n",PROGRAM,VERSION,AUTHORS);
         printf(
-"Copyright (c) 2008 - 2018 by the checktestdata developers and all\n"
+"Copyright (c) 2008 - 2026 by the checktestdata developers and all\n"
 "respective contributors. All rights reserved.\n"
 "%s comes with ABSOLUTELY NO WARRANTY and is provided \"as is\".\n"
 "You are free to modify and redistribute this program under the conditions\n"
@@ -148,6 +149,11 @@ int main(int argc, char **argv)
 	fstream fdata;
 	if ( argc>optind+1 ) {
 		char *datafile = argv[optind+1];
+		if ( datafile==string("-") ) goto use_stdin;
+		if ( filesystem::is_directory(datafile) ) {
+			cerr << "Expected a file instead of a directory: '" << datafile << "'.\n";
+			exit(exit_failure);
+		}
 		ios_base::openmode mode = generate ? ios_base::out|ios_base::trunc|ios_base::binary : ios_base::in|ios_base::binary;
 		fdata.open(datafile, mode);
 		if ( fdata.fail() ) {
@@ -155,6 +161,7 @@ int main(int argc, char **argv)
 			exit(exit_failure);
 		}
 	}
+  use_stdin:
 	iostream& data = fdata.is_open() ? static_cast<iostream&>(fdata)
 	                                 : (generate ? static_cast<iostream&>(cout)
 	                                             : static_cast<iostream&>(cin) );
