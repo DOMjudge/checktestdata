@@ -14,7 +14,7 @@ beginning of a line) and run until end of line.
 The following grammar sub-elements are defined:
 
     integer  := 0|-?[1-9][0-9]*
-    float    := -?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?
+    float    := -?([0-9]*\.[0-9]+|[0-9]+\.|[0-9]+)(\.[0-9]+)?([eE][+-]?[0-9]+)?
     string   := ".*"
     varname  := [a-z][a-z0-9]*
     variable := <varname> | <varname> '[' <expr> [',' <expr> ...] ']'
@@ -28,6 +28,7 @@ The following grammar sub-elements are defined:
                  <expr> <compare> <expr> | <testcommand>
 
 That is, variables can take integer, floating point as well as string values.
+Variables can be indexed with (multiple) integers, i.e., behave like arrays.
 No dynamic casting is performed, except that integers can be cast into floats.
 Integers and floats of arbitrary size and precision are supported, as well as
 the arithmetic operators `+-*%/^` with the usual rules of precedence. An
@@ -70,7 +71,7 @@ boolean value. These are:
     coordinates, then <tt>UNIQUE(x,y)</tt> checks that the points
     (x[i],y[i]) in the plane are unique.</dd>
 
-<dt><tt>INARRAY(&lt;value&gt; val, &lt;varname&gt; var)</tt></dt>
+<dt><tt>INARRAY(&lt;expr&gt; val, &lt;varname&gt; var)</tt></dt>
 
 <dd>Checks if val occurs in the array variable var.</dd>
 </dl>
@@ -99,16 +100,20 @@ The following commands are available:
 <dt><tt>INT(&lt;expr&gt; min, &lt;expr&gt; max [, &lt;variable&gt; name])</tt></dt>
 
 <dd>Match an arbitrary sized integer value in the interval [min,max]
-    and optionally assign the value read to variable 'name'.</dd>
+    and optionally assign the value read to variable 'name'. Both min
+    and max must evaluate to integers.</dd>
 
 <dt><tt>FLOAT(&lt;expr&gt; min, &lt;expr&gt; max [, &lt;variable&gt; name [, option]])</tt></dt>
 
 <dd>Match a floating point number in the range [min,max] and
     optionally assign the value read to the variable 'name'. When the
     option 'FIXED' or 'SCIENTIFIC' is set, only accept floating point
-    numbers in fixed point or scientific notation, respectively.</dd>
+    numbers in fixed point or scientific notation, respectively.
+    The significand must match `-?(0|[1-9][0-9]*)(\.[0-9]+)?`, i.e.,
+    no leading zeros, and if a dot is present, it must be followed by
+    at least one digit.</dd>
 
-<dt><tt>FLOATP(&lt;expr&gt; min, &lt;expr&gt; max, &lt;value&gt; mindecimals, &lt;value&gt; maxdecimals, [, &lt;variable&gt; name [, option]])</tt></dt>
+<dt><tt>FLOATP(&lt;expr&gt; min, &lt;expr&gt; max, &lt;expr&gt; mindecimals, &lt;expr&gt; maxdecimals, [, &lt;variable&gt; name [, option]])</tt></dt>
 
 <dd>Match a floating point number as above, but with number of
     decimals in the range [mindecimals,maxdecimals]. Both must be
@@ -136,7 +141,8 @@ The following commands are available:
 
 <dt><tt>SET(&lt;variable&gt; name '=' &lt;expr&gt; value[, ...])</tt></dt>
 
-<dd>Assign 'value' to variable 'name', etc...</dd>
+<dd>Assign 'value' to variable 'name', etc... The assignments are
+    evaluated from left to right.</dd>
 
 <dt><tt>UNSET(&lt;varname&gt; a [,&lt;varname&gt; b ...])</tt></dt>
 
