@@ -1,0 +1,7 @@
+SET(n = 3)
+SET(a = 0) # a is 0
+REPI(i, n, SPACE)
+    INT(1, 10, a[i]) # no, changed my mind, a is an array
+END
+NEWLINE
+ASSERT(UNIQUE(a))

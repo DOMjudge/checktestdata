@@ -1,0 +1,2 @@
+# Check regex repetitions
+REGEX("[a-z]{1,1500}") NEWLINE
