@@ -1,0 +1,2 @@
+# Tests regexes with escaped symbols
+REGEX("\({1,5}\.{1,5}") NEWLINE
