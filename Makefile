@@ -131,23 +131,10 @@ coverage-clean:
 coverage-report: coverage
 	gcovr -g -r . --html --html-details -o coverage.html
 
-# Rules to configure and build for a Coverity scan. This assumes we're
-# running from the Git repository.
-coverity-conf:
-	git checkout $(subst 1,-q,$(QUIET)) release
-	./bootstrap $(subst 1,-q,$(QUIET))
-
-coverity-build: config.mk dist
-	$(MAKE) build
-	@VERSION=`grep '^VERSION =' config.mk | sed 's/^VERSION = *//'` \
-	echo "VERSION=$$VERSION" > cov-submit-data-version.sh
-
 dist: $(PARSER_GEN)
 
 clean:
 	-rm -f $(TARGETS) $(OBJECTS)
-# Remove Coverity scan data:
-	-rm -rf cov-int coverity-scan.tar.xz cov-submit-data-version.sh
 
 distclean: clean coverage-clean
 	-rm -f $(PARSER_GEN)
@@ -157,5 +144,4 @@ maintainer-clean: distclean
 	-rm -f config.mk config.status configure
 
 .PHONY: build dist check clean distclean maintainer-clean \
-        coverage coverage-clean coverage-report \
-        coverity-conf coverity-build
+        coverage coverage-clean coverage-report

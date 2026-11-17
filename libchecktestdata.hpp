@@ -9,13 +9,13 @@
 
 namespace checktestdata {
 
-const int exit_failure = 2;
+constexpr int exit_failure = 2;
 
-const int opt_whitespace_ok = 1; // ignore additional whitespace
-const int opt_quiet         = 2; // quiet execution: only return status
-const int opt_debugging     = 4; // print additional debugging statements
+constexpr int opt_whitespace_ok = 1; // ignore additional whitespace
+constexpr int opt_quiet         = 2; // quiet execution: only return status
+constexpr int opt_debugging     = 4; // print additional debugging statements
 
-const int float_precision = 15; // output precision (digits) of floats
+constexpr int float_precision = 15; // output precision (digits) of floats
 
 void init_checktestdata(std::istream &progstream, int opt_mask = 0, long seed = -1);
 /* Initialize libchecktestdata by loading syntax from progstream and
