@@ -1,0 +1,8 @@
+INT(1, 100) NEWLINE
+
+SET(q=0.004)
+SET(p=0)
+REP(250)
+   SET(p = p+q)
+END
+ASSERT(p <= 1.0)
